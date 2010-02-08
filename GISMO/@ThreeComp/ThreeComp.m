@@ -15,11 +15,12 @@ classdef ThreeComp
         inclination
     end
     
-     
+    
     methods
         function TC = ThreeComp(varargin)
             
-            % FUNCTIONS HAS A SINGLE (WAVEFORM) ARGUMENT
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% FUNCTIONS HAS A SINGLE (WAVEFORM) ARGUMENT
             if length(varargin)==1
                 W = varargin{1};
                 if ~isa(W,'WAVEFORM') || size(W,2)~=3
@@ -35,7 +36,7 @@ classdef ThreeComp
                 
                 % SINGLE WAVEFORM TUPLE
                 if numel(W)==3
-                    TC.traces  = reshape(W,1,3);
+                    TC.traces = reshape(W,1,3);
                 end
                 
             elseif nargin==0
@@ -43,11 +44,20 @@ classdef ThreeComp
                 
             end
             
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% FUNCTIONS HAS A SINGLE (WAVEFORM) ARGUMENT
+            if length(varargin)==2
+                W = varargin{1};
+                if ~isa(W,'WAVEFORM') || size(W,2)~=3
+                    
+                    
+                end
+                
+            end
+            
         end
         
     end
-    
 end
-
 
 

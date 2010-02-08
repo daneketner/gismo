@@ -2,6 +2,9 @@ function plot(TC,varargin)
 
 % WF3_PLOT(TC) Plot three component trace.
 
+% Author: Michael West, Geophysical Institute, Univ. of Alaska Fairbanks
+% $Date$
+% $Revision$
 
 if numel(TC)>1
     error('Plot must operate on a single element of a ThreeComp object only');
@@ -41,13 +44,12 @@ set(h1,'XGrid','on');
 
 % SET TITLE
 titlestr = (['Station: ' get(w(1),'station') '      Starting at ' datestr(get(w(1),'start'),'yyyy/mm/dd HH:MM:SS.FFF')]);
-% TODO: Next line should have if/then. Or add waveform/isfield command
-orid = num2str(get(w(1),'ORIGIN_ORID'));
-if ~isempty(orid)
+if isfield(w(1),'ORIGIN_ORID')
+    orid = num2str(get(w(1),'ORIGIN_ORID'));
     titlestr = [titlestr '      orid: ' orid];
+else
+    title(titlestr,'FontSize',14);
 end
-title(titlestr,'FontSize',14);
-
 
 % replace dates with station names if stations are different
 sta = get(w,'STATION');
