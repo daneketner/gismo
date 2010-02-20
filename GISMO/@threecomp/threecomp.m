@@ -6,7 +6,6 @@
 classdef threecomp
     properties
         traces
-        type
         backAzimuth
         rectilinearity
         planarity

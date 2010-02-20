@@ -45,7 +45,6 @@ switch upper(property)
                 val(n,1:3) = TC.traces;
             end
         elseif objSize2>1
-            disp('Here I am');
             for n1 = 1:objSize1
                 for n2 = 1:objSize2
                     val(n1,n2,1:3) = TC.traces;
@@ -64,14 +63,21 @@ switch upper(property)
             end
         end
         val = reshape(val,objSize1,objSize2);
-        
+    case 'STATION'
+        for n = 1:numObj
+            w = TC(n).waveform;
+            val(n) = {get(w(1),'STATION')};
+        end
+        val = reshape(val,objSize1,objSize2);
+    case 'CHANNEL'
+        for n = 1:numObj
+            w = TC(n).waveform;
+            val(n) = {get(w,'CHANNEL')};
+        end
+        val = reshape(val,objSize1,objSize2);  
     case 'TYPE'
         for n = 1:numObj
-            if isempty(TC(n).type)
-                val(n) = {''};
-            else
-                val(n) = {TC(n).type};
-            end
+            val(n) = gettype(TC(n));
         end
         val = reshape(val,objSize1,objSize2);
         
@@ -131,4 +137,17 @@ end
 
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DETERMINE TYPE PROPERTY
+% where TC and val are scalars
+%
+function val = gettype(TC)
+
+
+chan = get(TC,'CHANNEL');
+chan = chan{1};
+for n = 1:3
+   val(1) = {[ chan{1}(end) chan{2}(end) chan{3}(end) ]};
 end
+

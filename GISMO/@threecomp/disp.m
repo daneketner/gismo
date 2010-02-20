@@ -30,11 +30,7 @@ elseif numel(TC)==1 & minNumberOfSamples
     loc = get(TC.traces(1),'LOCATION');
     disp(['    net_sta_chan_loc:    ' net '_' sta '_' chan '_' loc]);
         
-    if isempty(TC.type)
-        disp(['    type:                ' 'property not set' ]);
-    else
-        disp(['    type:                ' TC.type ]);
-    end
+    disp(['    type:                ' char(get(TC,'TYPE')) ]);
 
     if isempty(TC.backAzimuth)
         disp(['    backAzimuth:         ' 'property not set' ]);
