@@ -1,23 +1,7 @@
-%% VOLCSEIS cookbook
-% This is a short demonstration of some of the more useful tools in the VOLCSEIS
-% toolboxes. Through a long evolutionary process starting at AVO in 1998, and
-% then through MVO, AEIC and back to AVO in 2008, this loose collection of
-% M-files has been compiled in reaction to different needs and environments.
-% They are in dire need of re-organisation.
+%% CATALOG and EVENTRATE cookbook
+% This is a short demonstration of some of the CATALOG and EVENTRATE classes.
 %
-% Today the main functions are:
-% (1) Tools for analysing event catalogs.
-% (2) Tools for tuning the swarm alarm system.
-% (3) Tools for computing and plotting reduced displacement.
-% (4) Tools for computing and plotting multi-station spectrograms.
-% (5) Tools for plotting digital helicorders.
-% There are also numerous library routines for manipulating times,
-% waveform objects, and for retrieving data from Antelope event
-% and station databases.
-%
-% In this cookbook we will examining 1 & 2 above in more detail. I will assume
-% that you are currently logged on to the AVO Seismology Linux network at the
-% Geophysical Institute at UAF. 
+% It is assumed that you already have GISMO on your MATLAB path.
 %
 % Note that this cookbook is written as an M-file and is converted to HTML
 % using the publish command. Type:
@@ -30,8 +14,7 @@
 
 %% Configuration
 % If you have not already started Matlab, do so now:
-%> mat32 -nojvm
-% To add the VOLCSEIS M-files to your Matlab path variable, call startup_volcseis:
+%> matlab &
 
 startup_volcseis;
 
@@ -39,7 +22,7 @@ startup_volcseis;
 % warning to off. By choosing a higher debug level, each M-file will generate
 % additional output
 
-debug(0)
+set_debug(0)
 warning off
 
 %% (1) Plotting event catalogs. 

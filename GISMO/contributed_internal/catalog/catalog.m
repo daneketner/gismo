@@ -6,14 +6,10 @@ classdef catalog
 % manipulating earthquake catalogs at the Montserrat Volcano Observatory,
 % and more recently, the Alaska Volcano Observatory. 
 %
-% RSAM data are historically stored in "BOB" format, which consists
-% of a 4 byte floating number for each minute of the year, for a 
-% single station-channel. In version 2.x of IceWeb (TreMoR) various
-% new datasets are stored in BOB format, including the maximum, median,
-% mean and RMS values of the ground velocity and displacement, as well
-% as energy, peak frequency and mean frequency. So this class also
-% can be used to load and plot those data. See usage for LOADBOBFILE
-% below.
+% Presently CATALOG only imports catalog information from a CSS3.0 database,
+% which is the default format used by Antelope/Datascope. It would be trivial
+% to add new import methods, say from a Hypoinverse file, a Hypoellipse file,
+% a Seisan catalog or an AQMS database. 
 %
 % C = CATALOG() creates an empty catalog object.
 %
@@ -26,12 +22,14 @@ classdef catalog
 % be a region described in avo_volcs.pf such as 'spurr' or 'redoubt'.
 %
 % EXAMPLES:
-% 1. Create a catalog object of the last 3 days of data from Redoubt:
-% c = catalog(utnow-3, utnow, -0.5, 'redoubt', '/avort/oprun/events/antelope/events_antelope', 'daily');
+% 1. Create a catalog object of the last 5 days of AEIC events from the region latitude = 55.0 to 65.0, longitude = -170.0 to -135.0
+% c = catalog(utnow-3, utnow, [], [-170.0 -135.0 55.0 65.0] , '/aerun/sum/run/dbsum/dbsum', 'daily');
 %
-% 2. Create a catalog object of all events ever recorded at Spurr:
-% c = catalog(datenum(1989,1,1), utnow, [], 'spurr',
-% '/Seis/Kiska4/picks/Total/Total', '');
+% 2. Create a catalog object of all events with magnitude > 0.2 in the last 3 days of data from Redoubt:
+% c = catalog(utnow-3, utnow, 0.2, 'redoubt', '/avort/oprun/events/antelope/events_antelope', 'daily');
+%
+% 3. Create a catalog object of all events recorded at Spurr between 1989 and 2006:
+% c = catalog(datenum(1989,1,1), datenum(2006,1,1), [], 'spurr', '/Seis/Kiska4/picks/Total/Total', '');
 %
 % % ------- DESCRIPTION OF FIELDS IN CATALOG OBJECT ------------------
 % The following are vectors, containing one element per origin:
@@ -98,17 +96,17 @@ classdef catalog
             
         function cobj = catalog(varargin)
             switch nargin
-                case {5, 6, 7}, cobj = cobj.catalog1(varargin{:});
-                case 10, cobj.catalog2(varargin{:});
-                case 11, cobj.catalog3(varargin{:});
+                case {5, 6, 7}, cobj = cobj.css2catalog(varargin{:});
+                case 10, cobj.css_load(varargin{:});
+                case 11, cobj.css_import(varargin{:});
                 otherwise, disp('Number of input arguments to constructor not recognized');
             end        
         end
 
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-		%function cobj = catalog1(someobj, snum, enum, magthresh, region, db, archiveformat, subclass) % 5 or 6 arguments
-        function cobj = catalog1(cobj, snum, enum, magthresh, region, db, archiveformat, subclass) % 5 or 6 arguments
+		%function cobj = css2catalog(someobj, snum, enum, magthresh, region, db, archiveformat, subclass) % 5 or 6 arguments
+        function cobj = css2catalog(cobj, snum, enum, magthresh, region, db, archiveformat, subclass) % 5 or 6 arguments
 			% This is the main, high-level constructor for a catalog object from an Antelope database
 			% This constructor is based on the m-file db2event and is used to load a catalog from an Antelope database
 			%
@@ -160,7 +158,7 @@ classdef catalog
 			end
 			mindepth = -3; % the minimum depth for an AVO catalog event
 			maxdepth = 800;
-			cobj = cobj.catalog2(db, archiveformat, snum, enum, leftlon, rightlon, lowerlat, upperlat, mindepth, maxdepth, magthresh);
+			cobj = cobj.css_load(db, archiveformat, snum, enum, leftlon, rightlon, lowerlat, upperlat, mindepth, maxdepth, magthresh);
 
 			% Append input parameters to structure
 			cobj.snum = snum;
@@ -194,7 +192,7 @@ classdef catalog
 
  		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-		function cobj = catalog2(cobj, dbroot,archiveformat,snum,enum,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag)
+		function cobj = css_load(cobj, dbroot,archiveformat,snum,enum,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag)
 			% This is called by both constructors above
 			% It is a copy of the old 'loadevent' function
 			%
@@ -212,7 +210,7 @@ classdef catalog
 			%	event			a structure containing the fields lat, lon, depth, time, evid, nass and mag for each event meeting the selection criteria
 			%
 			% Example:
-			%	e = catalog2('dbseg/Quakes','daily',datenum(2009,1,25),datenum(2009,7,1),-179,179,-89,89,0,30,-0.5);
+			%	e = css_load('dbseg/Quakes','daily',datenum(2009,1,25),datenum(2009,7,1),-179,179,-89,89,0,30,-0.5);
 			%
 			% Glenn Thompson, 2007-04-06
 
@@ -235,7 +233,7 @@ classdef catalog
 			if strcmp(archiveformat,'')
 				dbname = dbroot;
 				if exist(dbname,'file')
-					cobj = cobj.catalog3(snum, enum, dbname, leftlon, rightlon, lowerlat, upperlat, minz, maxz, minmag);
+					cobj = cobj.css_import(snum, enum, dbname, leftlon, rightlon, lowerlat, upperlat, minz, maxz, minmag);
 				else
 					print_debug(sprintf('database %s not found',dbname),1);
 				end
@@ -245,7 +243,7 @@ classdef catalog
 						[yr,mn,dy]=yyyymmdd(dnum);
 						dbname = sprintf('%s_%s_%s_%s',dbroot,yr,mn,dy);
 						if exist(dbname,'file')
-							e = cobj.catalog3(max([dnum snum]),min([dnum+1 enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
+							e = cobj.css_import(max([dnum snum]),min([dnum+1 enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
 							cobj.lon   = cat(1,cobj.lon,   e.lon);
 							cobj.lat   = cat(1,cobj.lat,   e.lat);
 							cobj.depth = cat(1,cobj.depth, e.depth);
@@ -266,7 +264,7 @@ classdef catalog
 							dnum = datenum(yyyy,mm,1);
 							dbname = sprintf('%s%04d_%02d',dbroot,yyyy,mm);
 							if exist(dbname,'file')
-								e = cobj.catalog3(max([dnum snum]),min([ datenum(yyyy,mm+1,1) enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
+								e = cobj.css_import(max([dnum snum]),min([ datenum(yyyy,mm+1,1) enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
 								cobj.lon   = cat(1,cobj.lon,   e.lon);
 								cobj.lat   = cat(1,cobj.lat,   e.lat);
 								cobj.depth = cat(1,cobj.depth, e.depth);
@@ -293,7 +291,7 @@ classdef catalog
 
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-		function cobj = catalog3(cobj, snum,enum,dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag)
+		function cobj = css_import(cobj, snum,enum,dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag)
 
 			% This code was previously a separate function called dbimport2event
 			
