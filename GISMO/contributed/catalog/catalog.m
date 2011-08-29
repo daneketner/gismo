@@ -149,7 +149,7 @@ classdef catalog
                     [region, source, lon, lat] = readavogrids(region);
                     leftlon = region(1); rightlon=region(2); lowerlat=region(3); upperlat=region(4);
                 else
-                    [sourcelon, sourcelat, leftlon, rightlon, lowerlat, upperlat] = readavovolcs(region); 
+                    [sourcelon, sourcelat, leftlon, rightlon, lowerlat, upperlat] = readavovolcs(region, 'demo/avo_volcs.pf'); 
                 end
                     
 			else
@@ -314,11 +314,11 @@ classdef catalog
 			% First, lets get a summary of origins
 			try
 				db = dbopen(dbname, 'r');
-			catch
+            catch ME
 				if ~exist(dbname, 'file')
 					print_debug(sprintf('%s does not exist',dbname),1);
 				else
-					rethrow(exception);
+					rethrow(ME);
 				end
  			   	return;
 			end
