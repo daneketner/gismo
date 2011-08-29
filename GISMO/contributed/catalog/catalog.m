@@ -73,6 +73,7 @@ classdef catalog
 % $Date: 2000-09-11 $
 % $Revision: 0 $
 
+
 	properties
 		lon	% longitude
 		lat	% latitude
