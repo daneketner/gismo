@@ -1,4 +1,4 @@
-%% CATALOG and EVENTRATE cookbook
+set%% CATALOG and EVENTRATE cookbook
 % This is a short demonstration of some of the CATALOG and EVENTRATE classes.
 %
 % It is assumed that you already have GISMO on your MATLAB path.
@@ -40,7 +40,8 @@ snum = datenum(2008,5,2);
 enum = datenum(2008,8,31,23,59,59);
 magthreshold = -0.5;
 volcano = 'Okmok';
-dbroot = '/home/glenn/unrest/Okmok2008/Quakes';
+dirname = fileparts(which('catalog'));
+dbroot = [dirname,'/demo/Quakes'];
 archiveformat = 'daily'; 
 cobj = catalog(snum, enum, magthreshold, volcano, dbroot, archiveformat)
 
@@ -52,26 +53,30 @@ cobj = catalog(snum, enum, magthreshold, volcano, dbroot, archiveformat)
 % The result should be an event structure containing 2113 events, with fields
 % lon, lat, depth, time, nass, evid, mag and etype.
 %
-%>> e
-%e =
+%cobj = 
+%  catalog
+%
+%  Properties:
+%              lon: [2113x1 double]
 %              lat: [2113x1 double]
 %            depth: [2113x1 double]
-%             time: [2113x1 double]
+%             dnum: [2113x1 double]
 %             nass: [2113x1 double]
 %             evid: [2113x1 double]
 %              mag: [2113x1 double]
-%            etype: [2113x1 char]
+%            etype: [1x2113 char]
 %             snum: 733530
 %             enum: 7.3365e+05
-%     magthreshold: -0.5000
+%           minmag: -0.5000
+%             auth: {2113x1 cell}
 %           region: [-168.4000 -167.8000 53.2000 53.6000]
-%           dbroot: '/home/glenn/unrest/Okmok2008/Quakes'
+%           dbroot: '/scratch/src/gt-gismo-branch/GISMO/contributed/catalog/demo/Quakes'
 %    archiveformat: 'daily'
-%
+%  Methods
 
 % Now we will make a plot of magnitude versus time. 
 
-eventplot(e)
+plot(cobj)
 set(gcf,'Position',[50 50 700 400]);
 
 % We might also only want to plot each 'etype' on a separate subplot:
@@ -83,42 +88,78 @@ set(gcf,'Position',[50 50 700 400]);
 % the event database we are using does not contain any etype information
 % (such as 'a'/'t' for volcano-tectonic or 'b'/'l' for low frequency earthquakes).
 
-% Next we can convert our event structure, e, into an event rate structure:
-
-er = event2eventrate(e, 1)
-
-% The result is:
-% Found 2113 matching events
-% er =
-%            dnum: [1x122 double]
-%          counts: [1x122 double]
-%         cum_mag: [1x122 double]
-%    total_counts: 2113
-%       total_mag: 4.6948
-%           etype: '*'
-%            snum: 733530
-%            enum: 7.3365e+05
-%         binsize: 1
-%         numbins: 122
+% Next we can convert our catalog object, cobj into an eventrate object:
+erobj = eventrate(cobj, 1)
+%erobj = 
+%  eventrate
 %
-% Here the '*' indicates that we are using a wildcard for etype. We have 122 bins of
+%  Properties:
+%                 counts: [1x121 double]
+%              mean_rate: [1x121 double]
+%            median_rate: [1x121 double]
+%                cum_mag: [1x121 double]
+%               mean_mag: [1x121 double]
+%             median_mag: [1x121 double]
+%           total_counts: 2113
+%              total_mag: 4.6948
+%                   dnum: [1x121 double]
+%                numbins: 121
+%    detection_threshold: [1x121 double]
+%                  etype: {'*'}
+%                   snum: 733530
+%                   enum: 7.3365e+05
+%                binsize: 1
+%               stepsize: 1
+%                 region: [-168.4000 -167.8000 53.2000 53.6000]
+%                 minmag: -0.5000
+%                 dbroot: '/scratch/src/gt-gismo-branch/GISMO/contributed/catalog/demo/Quakes'
+%          archiveformat: 'daily'
+%                   auth: {2x1 cell}
+%  Methods
+%
+% Here the '*' indicates that we are using a wildcard for etype. We have 121 bins of
 % size 1 day. A total of 2113 events, and their combined energy is equivalent to 
 % a magnitude 4.6948 earthquake.
 %
 % We can now plot this eventrate structure:
 
-eventrateplot(er);
+plot(erobj);
 set(gcf,'Position',[50 50 700 400]);
  
-% The result is a figure window with a counts per day plot above, and a cumulative
-% magnitude per day plot below.
-% Sometimes cumulative magnitude, being a logarithmic scale, doesn't really
-% emphasise differences in cumulative energy clearly, so we can plot energy instead.
+% The result is a figure window with a counts per day plot.
+%
+% This is actually equivalent to typing:
+%
+% >> plot(erobj, 'field', 'counts');
+%
+% Other metrics that can be plotted are:
+%   mean_rate
+%   median_rate
+%   cum_mag
+%   mean_mag
+%   median_mag
+%   energy
+% 
+% All of these are properties of an eventrate object except for energy,
+% which is computed from cum_mag on-the-fly.
+%
+% Several can be plotted at once using a cell array:
 
-eventrateplot(er, 'type', 'energy');
-set(gcf,'Position',[50 50 700 400]);
+plot(erobj, 'field', {'mean_rate'; 'median_rate'; 'mean_mag'; 'cum_mag'});
 
-% Energy here is in arbitrary units.
+% [Note to UAF scientists: These are the same metrics used by the swarm tracking system.
+% See:
+% http://www.aeic.alaska.edu/input/west/papers/2009_srl_thompson_redoubtSwarms.pdf]
+
+% Sometimes it is desirable to compute event rate metrics for sliding -
+% i.e. overlapping - time windows. This is easily done with the 'stepsize'
+% parameter. If omitted, stepsize defaults to the binsize - which is the
+% length of the time window. So in the previous example, both binsize and
+% stepsize were 1.0 days. But we can just as easily compute an eventrate
+% object for the same catalog object with a binsize of 1 hour, and stepsize
+% of just 5 minutes. 
+
+erobj2 = eventrate(cobj, 1/24, 'stepsize',  5/1440)
 
 %% Arrays of event and eventrate structures
 % In general, if we have arrays of event structures, eventplot will plot each on

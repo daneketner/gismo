@@ -1,6 +1,15 @@
 classdef eventrate
 %
 % EVENTRATE Event Rate class constructor, version 1.0.
+%
+% Seismologists frequently make plots of 'earthquake counts", i.e. the
+% number of events per day, or per hour, or per some other time interval.
+% Sometimes it is some other parameter - like the cumulative energy, or
+% average magnitude, per unit time that is of interest. The EVENRTATE class
+% provides a convenient tool to compute and plot many different metrics on a
+% user-defined timescale. It is generally used in combination with the
+% catalog class. It can also import directly from a Datascope database that
+% uses the swarms schema.
 % 
 % EVENTRATE is a class that has been developed around plotting earthquake
 % counts - i.e. the rate of events per unit time. It has evolved to compute
@@ -47,12 +56,12 @@ classdef eventrate
 %
 % % ------- METHODS -------- %
 %
-% plot(er) or plot(er, 'field', 'counts')   - event rate versus time
-% plot(er, 'field', {'mean_rate'})            - hourly mean event rate versus time
-% plot(er, 'field', {'median_rate'})          - hourly median event rate versus time
-% plot(er, 'field', {'mean_mag'})             - hourly mean magnitude versus time
-% plot(er, 'field', {'cum_mag'})              - hourly cumulative magnitude versus time
-% plot(er, 'field', {'counts';'mean_rate';'cum_mag'}) - would make plots for all those metrics mentioned in the cell array.
+% plot(er) or plot(er, 'metric', 'counts')   - event rate versus time
+% plot(er, 'metric', {'mean_rate'})            - hourly mean event rate versus time
+% plot(er, 'metric', {'median_rate'})          - hourly median event rate versus time
+% plot(er, 'metric', {'mean_mag'})             - hourly mean magnitude versus time
+% plot(er, 'metric', {'cum_mag'})              - hourly cumulative magnitude versus time
+% plot(er, 'metric', {'counts';'mean_rate';'cum_mag'}) - would make plots for all those metrics mentioned in the cell array.
 % importfromswarmdb - yep, there is a method to construct an eventrate
 % object from a swarm metrics database, as written by the real-time swarm
 % tracking module "dbdetectswarm".
@@ -90,23 +99,23 @@ classdef eventrate
 	methods
         
         function Obj = eventrate(varargin)
-
-            switch nargin
-                case 0, return;
+    
+            if nargin==0
+                return;
             end
-            if strcmp(class(varargin{1}), 'char')
-                Obj = eventrate();
-                Obj = importswarmdb(Obj, varargin{1}, varargin{2}, varargin{3}, varargin{4});
+            if strcmp(class(varargin{1}), 'char')  
+                Obj = Obj.importswarmdb(varargin{1}, varargin{2}, varargin{3}, varargin{4});
                 return;
             end
             if strcmp(class(varargin{1}), 'catalog')
-                Obj = eventrate();
                 catalogObj = varargin{1};
                 binsize = varargin{2};
-                if nargin==2
-                    Obj = importcatalog(Obj, catalogObj, binsize);
-                else
-                    disp('sprintf(This mode is no longer supported. \nInstead create a blank eventrate object with er = eventrate(). \nThen call er.importcatalog(catalogObj, binsize, varargin');
+                switch nargin
+                    case 2, Obj = Obj.importcatalog(catalogObj, binsize);
+                    case 4, Obj = Obj.importcatalog(catalogObj, binsize, varargin{3}, varargin{4});
+                    case 6, Obj = Obj.importcatalog(catalogObj, binsize, varargin{3}, varargin{4}, varargin{5}, varargin{6});
+                    %case 8, Obj = Obj.importcatalog(catalogObj, binsize, varargin{3}, varargin{4}, varargin{5}, varargin{6}, varargin{7}, varargin{8});
+                    otherwise, disp('sprintf(This mode is not supported. \nInstead create a blank eventrate object with er = eventrate(). \nThen call er.importcatalog(catalogObj, binsize, varargin');
                 end 
             end
         end     
@@ -120,12 +129,14 @@ classdef eventrate
         %
         % INPUT:  
         % 	binsize = bin size for binning event data in days (e.g. 1/24 = 1 hour, 1/1440 = 1 minute)
-        %	stepsize = step size in days, this is how much bins are incremented each time. Default is binsize.
+        %
+        % Optional Parameters:
+        %	'stepsize', stepsize = step size in days, this is how much bins are incremented each time. Default is binsize.
         %	           Cannot be larger than binsize.
-        %	etypes = (optional) a character array of the etypes to select. Each will be returned
+        %	'etypes', {'relht'} = a character array of the etypes to select. Each will be returned
         % 		in a separate eventrate object. For example, etypes = 'relht' would return
-        %		a 5x1 array of eventrate objects. Default is '*' (groups all etypes together).
-        % 	minmag will cut out events with a largest magnitude (ml, mb, ms) smaller than this.
+        %		a 5x1 array of eventrate objects. Default is '*' (groups
+        %		all etypes together).
         %
         % Example 1:
         % 	Obj = importcatalog(catalogObj, 1/24);
@@ -134,13 +145,13 @@ classdef eventrate
         %
         %
         % % Example 2:
-        % 	Obj = importcatalog(catalogObj, 10/1440, 'etype', 'rlt', 'minmag', 0.5);
+        % 	Obj = importcatalog(catalogObj, 10/1440, 'etype', 'rlt');
         %
         % This will return a 3x1 array of eventrate structures corresponding to etypes 'r', 'l' and 't', with bins of 10 minutes
         % eliminating all events with magnitudes less than 0.5.
         %
         % % Example 3:
-        % 	Obj = importcatalog(catalogObj, 10/1440, 'stepsize', 5/1440, 'etype', 'rlt', 'minmag', 0.5);
+        % 	Obj = importcatalog(catalogObj, 10/1440, 'stepsize', 5/1440, 'etype', 'rlt');
         %
         % As above, but with 10 minute bins which slide by 5 minutes each time, so there is a 50% overlap. For example, there might
         % be 10 minutes bins starting at 10:00, 10:05, 10:10, 10:15, 10:20, etc. If stepsize is omitted, it defaults to the same as
@@ -154,7 +165,7 @@ classdef eventrate
             return;
         end
 
-        [stepsize, etypes, minmag] = process_options(varargin, 'stepsize', binsize, 'etypes', {'*'}, 'minmag', -999.0);
+        [stepsize, etypes] = process_options(varargin, 'stepsize', binsize, 'etypes', {'*'});
         if (stepsize > binsize)
             disp(sprintf('Invalid value for stepsize (%f). Cannot be greater than binsize (%f).',stepsize, binsize));
             return;
@@ -205,7 +216,7 @@ classdef eventrate
         Obj.binsize = binsize;
         Obj.stepsize = stepsize;
 
-        % preserve some properties of the event structure
+        % preserve some properties of the catalog object
         Obj.region = catalogObj.region;
         Obj.minmag = catalogObj.minmag;
         if isfield(catalogObj, 'dbroot')
@@ -236,37 +247,37 @@ classdef eventrate
         end % function
         
         function plot(Obj, varargin); 
-        % By default, the 'field' parameter is set to {'counts'}, and so only a counts plot is produced
+        % By default, the 'metric' parameter is set to {'counts'}, and so only a counts plot is produced
         % This can be overridden, e.g.
-        % plot(er, 'field', {'energy'}) will plot 1 subplot per figure of energy vs. date/time
-        % plot(er, 'field', {'mean_rate';'median_rate'}) will plot 2 subplots per figure
+        % plot(er, 'metric', {'energy'}) will plot 1 subplot per figure of energy vs. date/time
+        % plot(er, 'metric', {'mean_rate';'median_rate'}) will plot 2 subplots per figure
         %
-        % The full range of possible fields is:
+        % The full range of possible metrics is:
         %	counts, cum_mag, mean_mag, median_mag, mean_rate, median_rate, detection_threshold, energy
         %
         % If er is an array of eventrate structures (e.g. one per etype), each is plotted on a separate figure
         %
         % Author: Glenn Thompson
-        [field] = process_options(varargin, 'field', {'counts'});
-        if ~iscell(field)
-            field = {field};
+        [metric] = process_options(varargin, 'metric', {'counts'});
+        if ~iscell(metric)
+            metric = {metric};
         end
 
         for c = 1 : numel(Obj)
-            numsubplots = length(field);
+            numsubplots = length(metric);
             figure(gcf+1);
 
             for cc = 1: numsubplots
-                if strcmp(field{cc},'energy')
+                if strcmp(metric{cc},'energy')
                     data = cumsum(mag2eng(Obj(c).cum_mag));
                 else
-                    eval(  sprintf('data = Obj(c).%s;',field{cc} ) );
+                    eval(  sprintf('data = Obj(c).%s;',metric{cc} ) );
                 end
                 subplot(numsubplots,1,cc), bar( Obj(c).dnum, data );
                 datetick('x','keeplimits');
                 ymax = nanmax(catmatrices(1, data));
                 set(gca, 'YLim', [0 ymax]);
-                ylabel(field{cc});
+                ylabel(metric{cc});
             end
             suptitle(Obj(c).etype);
         end
@@ -284,10 +295,10 @@ classdef eventrate
         %	snum,enum	start and end datenumbers (Matlab time format, see 'help datenum')
         %
         % OUTPUT:
-        %	Obj		a structure containing the fields snum, enum, mean_rate, median_rate, mean_ml and cum_ml
+        %	Obj		an eventrate object
         %
         % Example:
-        %	eventrate = db2eventrate('/avort/devrun/dbswarm/swarm_metadata', 'RD_lo', datenum(2010, 7, 1), datenum(2010, 7, 14) );
+        %	eventrate = importswarmdb('/avort/devrun/dbswarm/swarm_metadata', 'RD_lo', datenum(2010, 7, 1), datenum(2010, 7, 14) );
         %
         % Glenn Thompson, 20100714
 
