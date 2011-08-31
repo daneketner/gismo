@@ -1,413 +1,115 @@
-set%% CATALOG and EVENTRATE cookbook
-% This is a short demonstration of some of the CATALOG and EVENTRATE classes.
+%% CATALOG and EVENTRATE cookbook
+%
+
+%% Introduction
+% This is a short demonstration of some of the methods of the CATALOG and EVENTRATE classes.
 %
 % It is assumed that you already have GISMO on your MATLAB path.
 %
-% Note that this cookbook is written as an M-file and is converted to HTML
-% using the publish command. Type:
+% This cookbook is written as an M-file and is converted to HTML using the PUBLISH command.
 %
-%> help publish
-%
-% for more information.
-
 % Author: Glenn Thompson, Geophysical Institute, Univ. of Alaska Fairbanks
 
-%% Configuration
-% If you have not already started Matlab, do so now:
-%> matlab &
+%% Loading event catalogs
+% The catalog class is for loading, plotting and analysing event catalogs.
+% For a detailed description, read HELP CATALOG.M.
 %
-% Also before we start, we will set the debug (verbosity) level to 0, and
-% warning to off. By choosing a higher debug level, each M-file will generate
-% additional output
-
-set_debug(0)
-warning off
-
-%% (1) Plotting event catalogs. 
-% For the purpose of this exercise we will be using data from the Okmok 2008
-% eruption. These data are stored in daily volumes, in Antelope CSS3.0 format,
-% at /home/glenn/unrest/Okmok2008. Check that you can see this directory.
+% For the purpose of this exercise we will be using data from Redoubt volcano
+% from 2009/03/20 to 2009/03/23. We will use two catalogs:
 %
-%> ls /home/glenn/unrest/Okmok2008
-
-% You will see there are event databases matching Quakes_YYYY_MM_DD from
-% 2008_05_02 to 2008_08_31, containing tables arrival, assoc, detection,
-% emodel, event, lastid, netmag, origerr, origin, predarr and stamag.
-% We will now load all the events / preferred origins with GETEVENTDATA.
-% For convenience, we will create our input arguments in advance:
-
-snum = datenum(2008,5,2);
-enum = datenum(2008,8,31,23,59,59);
-magthreshold = -0.5;
-volcano = 'Okmok';
-dirname = fileparts(which('catalog'));
-dbroot = [dirname,'/demo/Quakes'];
-archiveformat = 'daily'; 
-cobj = catalog(snum, enum, magthreshold, volcano, dbroot, archiveformat)
-
-% Here the volcano field is used with the avo_volcs.pf file to apply a
-% geographical latitude/longitude box filter to the data. (Note to self: This 
-% should instead use the grids database). This will only work if you can see
-% /avort/oprun.
+% # The real-time catalog, produced using Antelope.
+% # The analyst-reviewed offical AVO catalog, produced using Earthworm,
+% XPick and Hypoellipse (and then later converted to an Antelope database).
 %
-% The result should be an event structure containing 2113 events, with fields
-% lon, lat, depth, time, nass, evid, mag and etype.
+% Both catalog segments are distributed in the "demo" directory.
 %
-%cobj = 
-%  catalog
-%
-%  Properties:
-%              lon: [2113x1 double]
-%              lat: [2113x1 double]
-%            depth: [2113x1 double]
-%             dnum: [2113x1 double]
-%             nass: [2113x1 double]
-%             evid: [2113x1 double]
-%              mag: [2113x1 double]
-%            etype: [1x2113 char]
-%             snum: 733530
-%             enum: 7.3365e+05
-%           minmag: -0.5000
-%             auth: {2113x1 cell}
-%           region: [-168.4000 -167.8000 53.2000 53.6000]
-%           dbroot: '/scratch/src/gt-gismo-branch/GISMO/contributed/catalog/demo/Quakes'
-%    archiveformat: 'daily'
-%  Methods
+% We will now load the real-time catalog into a catalog object. First,
+% because we don't know where GISMO is on your system, we have to construct the
+% path to the demo directory based on where CATALOG.M resides:
 
-% Now we will make a plot of magnitude versus time. 
+dirname = fileparts(which('catalog')); 
+dbpath = [dirname,'/demo/avodb200903']; 
+cobj = catalog(datenum(2009,3,20), datenum(2009,3,23), [], 'Redoubt', dbpath, '')
 
+%% Magnitude-time plot
+% You should see that there are 1397 events in these 3 days. What are their
+% magnitudes? For a simple magnitude versus time plot, just call plot on
+% the catalog object:
 plot(cobj)
-set(gcf,'Position',[50 50 700 400]);
 
-% We might also only want to plot each 'etype' on a separate subplot:
+%% Volplot
+% For a map view, lat-depth, lon-depth and time-depth section, use volplot:
+volplot(cobj)
 
-eventplot(e, 'splitby', 'etype')
-set(gcf,'Position',[50 50 700 400]);
+%% Magnitude statistics
+% For a look at various statistics of magnitude on a daily basis:
+plotdailymagstats(cobj)
 
-% In this particular case, the output figure is the same as before because
-% the event database we are using does not contain any etype information
-% (such as 'a'/'t' for volcano-tectonic or 'b'/'l' for low frequency earthquakes).
-
-% Next we can convert our catalog object, cobj into an eventrate object:
-erobj = eventrate(cobj, 1)
-%erobj = 
-%  eventrate
-%
-%  Properties:
-%                 counts: [1x121 double]
-%              mean_rate: [1x121 double]
-%            median_rate: [1x121 double]
-%                cum_mag: [1x121 double]
-%               mean_mag: [1x121 double]
-%             median_mag: [1x121 double]
-%           total_counts: 2113
-%              total_mag: 4.6948
-%                   dnum: [1x121 double]
-%                numbins: 121
-%    detection_threshold: [1x121 double]
-%                  etype: {'*'}
-%                   snum: 733530
-%                   enum: 7.3365e+05
-%                binsize: 1
-%               stepsize: 1
-%                 region: [-168.4000 -167.8000 53.2000 53.6000]
-%                 minmag: -0.5000
-%                 dbroot: '/scratch/src/gt-gismo-branch/GISMO/contributed/catalog/demo/Quakes'
-%          archiveformat: 'daily'
-%                   auth: {2x1 cell}
-%  Methods
-%
-% Here the '*' indicates that we are using a wildcard for etype. We have 121 bins of
-% size 1 day. A total of 2113 events, and their combined energy is equivalent to 
-% a magnitude 4.6948 earthquake.
-%
-% We can now plot this eventrate structure:
-
+%% Plots of earthquake counts
+% For a quick plot of earthquakes per hour, we create an eventrate object
+% and then plot it. Here our binsize is 1/24 days, i.e. 1 hour.
+erobj = eventrate(cobj, 1/24);
 plot(erobj);
-set(gcf,'Position',[50 50 700 400]);
- 
-% The result is a figure window with a counts per day plot.
-%
-% This is actually equivalent to typing:
-%
-% >> plot(erobj, 'field', 'counts');
-%
-% Other metrics that can be plotted are:
-%   mean_rate
-%   median_rate
-%   cum_mag
-%   mean_mag
-%   median_mag
-%   energy
-% 
-% All of these are properties of an eventrate object except for energy,
-% which is computed from cum_mag on-the-fly.
-%
-% Several can be plotted at once using a cell array:
 
-plot(erobj, 'field', {'mean_rate'; 'median_rate'; 'mean_mag'; 'cum_mag'});
-
-% [Note to UAF scientists: These are the same metrics used by the swarm tracking system.
-% See:
-% http://www.aeic.alaska.edu/input/west/papers/2009_srl_thompson_redoubtSwarms.pdf]
-
+%% Event rates for overlapping time windows
 % Sometimes it is desirable to compute event rate metrics for sliding -
 % i.e. overlapping - time windows. This is easily done with the 'stepsize'
 % parameter. If omitted, stepsize defaults to the binsize - which is the
 % length of the time window. So in the previous example, both binsize and
-% stepsize were 1.0 days. But we can just as easily compute an eventrate
+% stepsize were 1.0 hours. But we can just as easily compute an eventrate
 % object for the same catalog object with a binsize of 1 hour, and stepsize
 % of just 5 minutes. 
-
 erobj2 = eventrate(cobj, 1/24, 'stepsize',  5/1440)
+plot(erobj2)
 
-%% Arrays of event and eventrate structures
-% In general, if we have arrays of event structures, eventplot will plot each on
-% a separate figure. Likewise if we have arrays of eventrate structures, eventrateplot
-% will plot each on a separate figure. To show this better, we now will use data
-% from two different data sources.
+%% Plots of other event rate metrics
+% >> plot(erobj) is actually equivalent to typing:
 %
-% The first dataset will be for Redoubt volcano, from 2009/03/15 to 2009/04/15
-
-snum = datenum(2009,3,15);
-enum = datenum(2009,4,15);
-magthreshold = -0.5;
-volcano = 'Redoubt';
-dbroot = '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes';
-archiveformat = 'daily'; 
-e(1) = db2event(snum, enum, magthreshold, volcano, dbroot, archiveformat)
-
-%e1 =
-%              lon: [6698x1 double]
-%              lat: [6698x1 double]
-%            depth: [6698x1 double]
-%             dnum: [6698x1 double]
-%             nass: [6698x1 double]
-%             evid: [6698x1 double]
-%              mag: [6698x1 double]
-%            etype: [6698x1 char]
-%             snum: 733847
-%             enum: 733878
-%     magthreshold: -0.5000
-%           region: [-153 -152.2000 60.3000 60.7000]
-%           dbroot: '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes'
-%    archiveformat: 'daily'
+% >> plot(erobj, 'metric', 'counts');
 %
-% For the second dataset, we change a few parameters:
-
-dbroot = '/sun/Seis/Kiska4/picks/Total/Total';
-archiveformat = ''; 
-e(2) = db2event(snum, enum, magthreshold, volcano, dbroot, archiveformat)
-
-% Now if we plot this array of event structures by etype, we get 2 figure windows.
-
-eventplot(e, 'splitby', 'etype')
-set(gcf,'Position',[50 50 700 400]);
-
-% The first shows 6672 unclassified events from the real-time catalog.
-% The second has two subplots, the upper showing 22 unclassified events from the
-% analyst-reviewed catalog, the lower showing 1485 volcano-tectonic events from
-% the analyst-reviewed catalog.
-%
-% Now we convert to a corresponding array of eventrate structures 
-
-er = event2eventrate(e, 1)
-set(gcf,'Position',[50 50 700 400]);
-
-% Since we have not specified what etypes we are interested in, the etype field
-% is ignored, and we get the same input (event) and output (eventrate) array sizes,
-% in this case, 2x1.
-%
-% We can plot this with:
-
-eventrateplot(er);
-set(gcf,'Position',[50 50 700 400]);
-
-% Alternatively, if we specify etypes as 'u' and 't' we get a different result:
-
-er = event2eventrate(e, 1, 'ut')
-
-% This time we get a 2x2 array of eventrate structures. First the unclassified
-% events for each dataset, then the volcano-tectonic events for each. These can
-% be plotted as before:
-
-eventrateplot(er);
-set(gcf,'Position',[50 50 700 400]);
-
-%% Tuning the swarm alarm system
-% For the purpose of the swarm alarm system, we can run simulations based on 
-% eventrate structures, but we will also use an additional argument 'stepsize'
-% to overlap adjacent bins. The swarm alarm system has usually been run with
-% a 1 hour binsize (or timewindow), but a stepsize of just 5 minutes.
-%
-% Let us clear our workspace, and load in Redoubt data from the period 2009/03/01 to
-% 2009/04/06.
-
-clear all;
-rehash;
-close all;
-snum = datenum(2009,3,1);
-enum = datenum(2009,4,6);
-magthreshold = -0.5;
-volcano = 'Redoubt';
-dbroot = '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes';
-archiveformat = 'daily'; 
-e = db2event(snum, enum, magthreshold, volcano, dbroot, archiveformat);
-%e =                                                                      
-%              lon: [6630x1 double]                                       
-%              lat: [6630x1 double]
-%            depth: [6630x1 double]
-%             dnum: [6630x1 double]
-%             nass: [6630x1 double]
-%             evid: [6630x1 double]
-%              mag: [6630x1 double]
-%            etype: [6630x1 char]
-%             snum: 733833
-%             enum: 733869
-%     magthreshold: -0.5000
-%           region: [-153 -152.2000 60.3000 60.7000]
-%           dbroot: '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes'
-%    archiveformat: 'daily'
-
-% Now lets create an eventrate structure, with a 1 hour window that slides by 5 minutes:
-
-er = event2eventrate(e, 1/24, 'stepsize', 5/1440)
-%Found 6630 matching events
-%Elapsed time is 2.829267 seconds.
-%er =
-%                   dnum: [1x10357 double]
-%                numbins: 10357
-%                 counts: [1x10357 double]
-%                cum_mag: [1x10357 double]
-%               mean_mag: [1x10357 double]
-%             median_mag: [1x10357 double]
-%              mean_rate: [1x10357 double]
-%            median_rate: [1x10357 double]
-%    detection_threshold: [1x10357 double]
-%           total_counts: 6630
-%              total_mag: 10.1686
-%                  etype: {'*'}
-%                   snum: 733833
-%                   enum: 733869
-%                binsize: 0.0417
-%               stepsize: 0.0035
-%                 region: [-153 -152.2000 60.3000 60.7000]
-%           magthreshold: -0.5000
-%                 dbroot: '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes'
-%          archiveformat: 'daily'
-
-% We can use eventrateplot to plot any of the data arrays contained in our
-% eventrate structure, and these are:
-%	counts
-%	cum_mag
-%	mean_mag
-%	median_mag
-%	mean_rate
-%	median_rate
-%	detection_threshold
-%
-% we can also plot energy, which is just the cum_mag converted back to energy.
-%
-% By default, only counts are plotted. This is because the field cell array defaults to:
+% The full list of metrics that can be plotted are:
+%%
 % 
-% >> field = {'counts'};
+% * counts
+% * mean_rate
+% * median_rate
+% * cum_mag
+% * mean_mag
+% * median_mag
+% * energy
 % 
-% To plot mean_rate, median_rate and cum_mag instead, we just do:
-
-field = {'mean_rate'; 'median_rate'; 'cum_mag'}
-eventrateplot(er, 'field', field);
-
-%% Loading event rate data from the real-time swarm alarm system
-% The real-time swarm alarm system (the program dbdetectswarm) computes similar
-% data to an eventrate structure, and stores it in a database table called 'metrics'
-% which contains mean_rate, median_rate, mean_ml and cum_ml fields.
-
-
-% To load these data into an eventrate structure, we use DB2EVENTRATE.
-
-er2 = db2eventrate('/avort/devrun/dbswarm/swarm_metadata','RD_lo',now-50,now)
-
-% This command should load these parameters based on all events in the real-time catalog
-% located at Redoubt volcano in the previous 50 days. This can also be plotted in the
-% standard way:
-
-eventrateplot(er2);
-
-% or:
-
-eventrateplot(er2, 'field', {'mean_rate'; 'median_rate'; 'mean_mag'; 'cum_mag'} );
-
-%% Simulating the swarm alarm system
-% So far we have seen various ways to generate an eventrate structure - either from
-% an event structure, or load from a database, and plot these data. Now we want to
-% move on to simulating the swarm alarm system, which is helpful for tuning parameters.
+% All of these are properties of an eventrate object except for energy,
+% which is computed from cum_mag on-the-fly.
 %
+% Several can be plotted at once in subplots of the same figure using a cell array:
 %
-% Let us begin with a favourite old dataset again - the 2009 Redoubt eruption:
-
-clear all;
-rehash;
-close all;
-snum = datenum(2009,2,1);
-enum = datenum(2009,4,6);
-magthreshold = -0.5;
-volcano = 'Redoubt';
-dbroot = '/home/glenn/unrest/Redoubt2009/dbquakes/Quakes';
-archiveformat = 'daily'; 
-
-% Plot the event structure, and store the axes handle as hax1.
-e = db2event(snum, enum, magthreshold, volcano, dbroot, archiveformat);
-eventplot(e);
-hax1 = gca;
-
-% Plot the eventrate structure, and store the axes handle as hax2.
-er = event2eventrate(e, 1/24, 'stepsize', 5/1440);
-eventrateplot(er, 'field', {'mean_rate'});
-hax2 = gca;
-
-% The simulation is not as configurable as the real-time swarm alarm system. There
-% are only 4 input arguments to the program THRESHOLD2SWARMALARM:
-
-help threshold2swarmalarm
-
-% these are eventrate structure, mean_rate threshold, median_rate threshold and 
-% significant change ratio threshold. If we use the following we are asking that
-% a new swarm alarm be declared whenever mean_rate >=16 and median_rate >=32.
-% And that the first escalation alarm be declared when mean_rate >=32 and 
-% median_rate >= 64. And that the swarm end be declared when mean_rate < 8 and
-% median_rate < 16.
-
-a = threshold2swarmalarm(er, 16, 32, 2)
-
-% We can turn this alarm structure, a, into a swarm structure, s:
-
-s = alarm2swarm(a);
-
-% Finally we can overlay a plot of these swarms over another plot axes, by
-% passing a handle to those axes:
-
-plotswarms(s, hax1);
-plotswarms(s, hax2);
-
-%% Reproducing figures like those shown in the swarm alarm system paper
+% >>plot(erobj2, 'metric', {'mean_rate'; 'median_rate'; 'mean_mag'; 'cum_mag'});
 %
-% We can mark the current axes with the times of explosions (as red crosses):
+% Or they can of course be plotted in separate figure windows:
+plot(erobj2, 'metric', 'mean_rate')
+plot(erobj2, 'metric', 'median_rate')
+plot(erobj2, 'metric', 'mean_mag')
+plot(erobj2, 'metric', 'cum_mag')
+%%
+% These are the same metrics, binsize and stepsize used by the AVO swarm tracking system.
+% See: <http://www.aeic.alaska.edu/input/west/papers/2009_srl_thompson_redoubtSwarms.pdf>
+% for details.
 
-add_redoubt_explosions;
 
-% We can add the creation time as a suptitle:
-
-addcreationtime;
-
-% There are also functions for adding other labels, and for adding tremor alarms. 
+%% Other methods
+% This has really only skimmed the surface of CATALOG and EVENTRATE class
+% functionality.
+% Both can also make use of the etype (event subclassification, e.g. lp,
+% vt, hybrid, rockfall) in making plots.
+% Both can handle vectors of objects.
+% CATALOG has useful methods to compare the hypocenters and magnitude
+% differences between two catalog objects.
+% CATALOG can also superimpose station locations, if an environment
+% variable called DBMASTER is set to point to the location of a master
+% stations database.
 %
-% We did not mention that we can load an alarm database with DB2ALARM and then run
-% ALARM2SWARM to generate a swarm structure as before.
-%
-% Finally, there ALARM2DB can be used to issue a new alarm message into an alarm
-% database (where it will be dispatched by the alarm manager). Note, ALARM2DB is
-% not used to convert an alarm structure into a database, but only to declare a
-% single alarm from within a Matlab-based alarm system.
+% For further information, feel free to email: gthompson@alaska.edu
+
 
 
 

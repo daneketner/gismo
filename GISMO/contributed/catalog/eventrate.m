@@ -121,7 +121,6 @@ classdef eventrate
         end     
         
         function Obj = importcatalog(Obj, catalogObj, binsize, varargin);
-            disp('CRUNCH FROM CATALOG *****************')
         % Obj = eventrate(catalogObj, binsize, varargin);
         %
         % catalog2eventrate converts an catalogObj structure into an eventrate object, using a bin size of binsize days,
@@ -165,7 +164,7 @@ classdef eventrate
             return;
         end
 
-        [stepsize, etypes] = process_options(varargin, 'stepsize', binsize, 'etypes', {'*'});
+        [stepsize, etypes] = libgt.process_options(varargin, 'stepsize', binsize, 'etypes', {'*'});
         if (stepsize > binsize)
             disp(sprintf('Invalid value for stepsize (%f). Cannot be greater than binsize (%f).',stepsize, binsize));
             return;
@@ -230,18 +229,18 @@ classdef eventrate
         disp(sprintf('Found %d matching events', length(j)));
 
         if Obj.total_counts > 0
-            [dnum_bin, counts_per_bin, sum_per_bin, smallest, median_per_bin, std_per_bin, median_time_interval] = bin_irregular(catalogObj.dnum(j), mag2eng(catalogObj.mag(j)), binsize, catalogObj.snum, catalogObj.enum, stepsize);;
+            [dnum_bin, counts_per_bin, sum_per_bin, smallest, median_per_bin, std_per_bin, median_time_interval] = libgt.bin_irregular(catalogObj.dnum(j), libgt.mag2eng(catalogObj.mag(j)), binsize, catalogObj.snum, catalogObj.enum, stepsize);;
             Obj.numbins = length(dnum_bin);
         	Obj.dnum = dnum_bin;
         	Obj.counts = counts_per_bin;
-        	Obj.cum_mag = eng2mag(sum_per_bin);
+        	Obj.cum_mag = libgt.eng2mag(sum_per_bin);
         	Obj.cum_mag(find(sum_per_bin==0)) = NaN; % replace -Inf values (0 values in sum_per_bin) as they mess up plots
-        	Obj.mean_mag = eng2mag(sum_per_bin./counts_per_bin); % mean energy as a magnitude
-        	Obj.median_mag = eng2mag(median_per_bin); % median energy as a magnitude
+        	Obj.mean_mag = libgt.eng2mag(sum_per_bin./counts_per_bin); % mean energy as a magnitude
+        	Obj.median_mag = libgt.eng2mag(median_per_bin); % median energy as a magnitude
         	Obj.mean_rate = counts_per_bin / (24 * binsize);
         	Obj.median_rate = 1 ./ (median_time_interval * 24);
-        	Obj.detection_threshold = eng2mag(smallest);
-        	Obj.total_mag = eng2mag(sum(mag2eng(catalogObj.mag)));
+        	Obj.detection_threshold = libgt.eng2mag(smallest);
+        	Obj.total_mag = libgt.eng2mag(sum(libgt.mag2eng(catalogObj.mag)));
 
         end
         end % function
@@ -258,7 +257,7 @@ classdef eventrate
         % If er is an array of eventrate structures (e.g. one per etype), each is plotted on a separate figure
         %
         % Author: Glenn Thompson
-        [metric] = process_options(varargin, 'metric', {'counts'});
+        [metric] = libgt.process_options(varargin, 'metric', {'counts'});
         if ~iscell(metric)
             metric = {metric};
         end
@@ -269,13 +268,13 @@ classdef eventrate
 
             for cc = 1: numsubplots
                 if strcmp(metric{cc},'energy')
-                    data = cumsum(mag2eng(Obj(c).cum_mag));
+                    data = cumsum(libgt.mag2eng(Obj(c).cum_mag));
                 else
                     eval(  sprintf('data = Obj(c).%s;',metric{cc} ) );
                 end
                 subplot(numsubplots,1,cc), bar( Obj(c).dnum, data );
                 datetick('x','keeplimits');
-                ymax = nanmax(catmatrices(1, data));
+                ymax = nanmax(libgt.catmatrices(1, data));
                 set(gca, 'YLim', [0 ymax]);
                 ylabel(metric{cc});
             end
@@ -325,12 +324,12 @@ classdef eventrate
             end
             db = dbsubset(db, sprintf('auth ~= /.*%s.*/',auth));
             numrows = dbquery(db,'dbRECORD_COUNT');
-            print_debug(sprintf('Got %d rows after auth subset',numrows),2);
+            libgt.print_debug(sprintf('Got %d rows after auth subset',numrows),2);
             sepoch = datenum2epoch(snum);
             eepoch = datenum2epoch(enum);
             db = dbsubset(db, sprintf('timewindow_starttime >= %f && timewindow_endtime <= %f',sepoch,eepoch));
             numrows = dbquery(db,'dbRECORD_COUNT');
-            print_debug(sprintf('Got %d rows after time subset',numrows),2);
+            libgt.print_debug(sprintf('Got %d rows after time subset',numrows),2);
 
             if numrows > 0
                 % Note that metrics are only saved when mean_rate >= 1.

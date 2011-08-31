@@ -6,12 +6,21 @@ classdef catalog
 % manipulating earthquake catalogs at the Montserrat Volcano Observatory,
 % and more recently, the Alaska Volcano Observatory. 
 %
-% Presently CATALOG only imports catalog information from a CSS3.0 database,
-% which is the default format used by Antelope/Datascope. It would be trivial
-% to add new import methods, say from a Hypoinverse file, a Hypoellipse file,
-% a Seisan catalog or an AQMS database. 
+% CATALOG only imports catalog information from:
+% (1) a CSS3.0 database - the default format used by Antelope/Datascope.
+% (2) a Datascope database written in the "swarms1.0" schema, defined at AVO. 
+%     This is the format used by the swarm tracking system.
+%
+% It would be trivial to add new import methods, and some useful importers
+% might read:
+% - a Hypoinverse file, 
+% - a Hypoellipse file,
+% - a Seisan catalog,
+% - an AQMS database. 
 %
 % C = CATALOG() creates an empty catalog object.
+%
+% % ------- READING FROM A CSS3.0 DATASCOPE DATABASE --------
 %
 % C = CATALOG(SNUM, ENUM, MINMAG, REGION, DBROOT, ARCHIVEFORMAT) creates
 % a catalog object with preferred origins subsetted between SNUM and ENUM,
@@ -21,7 +30,8 @@ classdef catalog
 % either be a 4-element vector [LONMIN LONMAX LATMIN LATMAX] or it can
 % be a region described in avo_volcs.pf such as 'spurr' or 'redoubt'.
 %
-% EXAMPLES:
+% EXAMPLES: (these assume you are on the AVO Linux network)
+%
 % 1. Create a catalog object of the last 5 days of AEIC events from the region latitude = 55.0 to 65.0, longitude = -170.0 to -135.0
 % c = catalog(utnow-3, utnow, [], [-170.0 -135.0 55.0 65.0] , '/aerun/sum/run/dbsum/dbsum', 'daily');
 %
@@ -32,7 +42,9 @@ classdef catalog
 % c = catalog(datenum(1989,1,1), datenum(2006,1,1), [], 'spurr', '/Seis/Kiska4/picks/Total/Total', '');
 %
 % % ------- DESCRIPTION OF FIELDS IN CATALOG OBJECT ------------------
+%
 % The following are vectors, containing one element per origin:
+%
 %   DNUM:   a MATLAB datenum corresponding to origin time
 %   LON:    origin longitude
 %   LAT:    origin latitude
@@ -42,7 +54,9 @@ classdef catalog
 %   AUTH:   a string which describes who or what computed the hypocenter
 %   MAG:    the magnitude.
 %   ETYPE:  the event type (subclassification). For example "t" = VT.
+%
 % The following describe the catalog data source:
+%
 %   SNUM:   a datenum describing the start date/time of the catalog.
 %   ENUM:   a datenum describing the end date/time of the catalog.
 %   MINMAG: a magnitude threshold applied to catalog.
@@ -65,9 +79,15 @@ classdef catalog
 %                       small differences in hypocenter and origin time
 % sta = db2stations(region): - return a list of stations based on a region
 % plotbvalue(c):        - simple b-value plot for catalog.
+% plotstations(c):      - superimpose the locations of stations
+%
+% % --------- Static Methods - should probably be in libgt instead --------- %
+% plotgrid(gridname):   - superimpose a detection grid (requires a grids database saved in places1.0 Datascope schema)  
+% plotbox(volcano):     - superimpose the region 
 %
 % % ------- SEE ALSO -------- %
-% EVENTRATE 
+% EVENTRATE - takes a catalog object and computes/plots different event
+% rate metrics.
 
 % AUTHOR: Glenn Thompson, Montserrat Volcano Observatory
 % $Date: 2000-09-11 $
@@ -141,7 +161,7 @@ classdef catalog
 			    archiveformat = '';  
 			end
 
-			print_debug(sprintf('archive format is %s',archiveformat),5);
+			libgt.print_debug(sprintf('archive format is %s',archiveformat),5);
   
 			% Check if region is a char (string) or double (array) class
 			if ischar(region)
@@ -149,7 +169,9 @@ classdef catalog
                     [region, source, lon, lat] = readavogrids(region);
                     leftlon = region(1); rightlon=region(2); lowerlat=region(3); upperlat=region(4);
                 else
-                    [sourcelon, sourcelat, leftlon, rightlon, lowerlat, upperlat] = readavovolcs(region, 'demo/avo_volcs.pf'); 
+                    dirname = fileparts(which('catalog'));
+                    pffile = [dirname,'/demo/avo_volcs.pf'];
+                    [sourcelon, sourcelat, leftlon, rightlon, lowerlat, upperlat] = libgt.readavovolcs(region, pffile); 
                 end
                     
 			else
@@ -229,19 +251,19 @@ classdef catalog
 				minmag = -999.0;
 			end
 
-			print_debug(sprintf('archive format is %s',archiveformat),3);
+			libgt.print_debug(sprintf('archive format is %s',archiveformat),3);
 
 			if strcmp(archiveformat,'')
 				dbname = dbroot;
 				if exist(dbname,'file')
 					cobj = cobj.css_import(snum, enum, dbname, leftlon, rightlon, lowerlat, upperlat, minz, maxz, minmag);
 				else
-					print_debug(sprintf('database %s not found',dbname),1);
+					libgt.print_debug(sprintf('database %s not found',dbname),1);
 				end
 			else
 				if strcmp(archiveformat,'daily')
 					for dnum=floor(snum):floor(enum-1/1440)
-						[yr,mn,dy]=yyyymmdd(dnum);
+						[yr,mn,dy]=libgt.yyyymmdd(dnum);
 						dbname = sprintf('%s_%s_%s_%s',dbroot,yr,mn,dy);
 						if exist(dbname,'file')
 							e = cobj.css_import(max([dnum snum]),min([dnum+1 enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
@@ -255,7 +277,7 @@ classdef catalog
 							cobj.etype  = cat(2,cobj.etype,  e.etype);
                             cobj.auth = cat(1, cobj.auth, e.auth);
 						else
-							print_debug(sprintf('database %s not found',dbname),1);
+							libgt.print_debug(sprintf('database %s not found',dbname),1);
 						end
 					end
 				else
@@ -276,7 +298,7 @@ classdef catalog
 								cobj.etype  = cat(1,cobj.etype,  e.etype);
                                 cobj.auth = cat(1, cobj.auth, e.auth);
 							else
-								print_debug(sprintf('database %s not found',dbname),1);
+								libgt.print_debug(sprintf('database %s not found',dbname),1);
 							end
 						end
 					end
@@ -309,14 +331,14 @@ classdef catalog
 			cobj.etype  = etype;
             cobj.auth = auth;
 
-			print_debug(sprintf('Loading data from %s',dbname),1);
+			libgt.print_debug(sprintf('Loading data from %s',dbname),1);
 
 			% First, lets get a summary of origins
 			try
 				db = dbopen(dbname, 'r');
             catch ME
 				if ~exist(dbname, 'file')
-					print_debug(sprintf('%s does not exist',dbname),1);
+					libgt.print_debug(sprintf('%s does not exist',dbname),1);
 				else
 					rethrow(ME);
 				end
@@ -326,9 +348,9 @@ classdef catalog
 			db = dblookup_table(db, 'origin');
 			if (dbquery(db, 'dbRECORD_COUNT')==0)
 				if ~exist([dbname,'.origin'], 'file')
-					print_debug(sprintf('%s.origin does not exist',dbname),1);
+					libgt.print_debug(sprintf('%s.origin does not exist',dbname),1);
 				else
-					print_debug(sprintf('Could not open %s.origin',dbname),1);
+					libgt.print_debug(sprintf('Could not open %s.origin',dbname),1);
 				end
 				return;
 			end
@@ -337,7 +359,7 @@ classdef catalog
 			db = dbsort(db, 'time');
 
 			numprefors = dbquery(db,'dbRECORD_COUNT');
-			print_debug(sprintf('Got %d prefors prior to subsetting',numprefors),2);
+			libgt.print_debug(sprintf('Got %d prefors prior to subsetting',numprefors),2);
 	
 			% Do the subsetting
 			if exist('minmag','var')
@@ -345,7 +367,7 @@ classdef catalog
                     expression_mag  = sprintf(' mb    >= %f  || ml    >=  %f || ms >=  %f',minmag,minmag,minmag);
                     db = dbsubset(db, expression_mag);
                     numevents = dbquery(db,'dbRECORD_COUNT');
-                    print_debug(sprintf('Got %d prefors after mag subsetting (%s)',numevents, expression_mag),2);
+                    libgt.print_debug(sprintf('Got %d prefors after mag subsetting (%s)',numevents, expression_mag),2);
                 end
 			end
 
@@ -362,7 +384,7 @@ classdef catalog
 
 
 			numevents = dbquery(db,'dbRECORD_COUNT');
-			print_debug(sprintf('Got %d prefors after time subsetting',numevents),2);
+			libgt.print_debug(sprintf('Got %d prefors after time subsetting',numevents),2);
 			if exist('upperlat','var')
 				expression_lat  = sprintf('lat   >= %f  && lat   <= %f',lowerlat,upperlat);
 				db = dbsubset(db, expression_lat);
@@ -382,7 +404,7 @@ classdef catalog
 
 			numevents = dbquery(db,'dbRECORD_COUNT');
 
-			print_debug(sprintf('Got %d prefors after region subsetting (%s && %s)',numevents,expression_lon,expression_lat),2);
+			libgt.print_debug(sprintf('Got %d prefors after region subsetting (%s && %s)',numevents,expression_lon,expression_lat),2);
 
 			if exist('maxz','var')
 				expression_z    = sprintf('depth >= %f    && depth <=  %f',minz,maxz);
@@ -390,8 +412,8 @@ classdef catalog
 			end
 
 			numevents = dbquery(db, 'dbRECORD_COUNT');
-			print_debug(sprintf('Got %d prefors after depth subsetting (%s)',numevents,expression_z),2);
-			print_debug(sprintf('Reading %d events from %s between  %s and %s', numevents, dbname, datestr(snum,0), datestr(enum, 0)),1); 
+			libgt.print_debug(sprintf('Got %d prefors after depth subsetting (%s)',numevents,expression_z),2);
+			libgt.print_debug(sprintf('Reading %d events from %s between  %s and %s', numevents, dbname, datestr(snum,0), datestr(enum, 0)),1); 
 
 
 			if numevents>0
@@ -450,8 +472,8 @@ classdef catalog
 			% If cobj is an array of event structures, each will be plotted on a separate figure
 			%
 			% Author: Glenn Thompson
-			print_debug(sprintf('> %s', mfilename),2);
-			[splitby, magthresh] = process_options(varargin, 'splitby', 'none', 'magthresh', -999.0);
+			libgt.print_debug(sprintf('> %s', mfilename),2);
+			[splitby, magthresh] = libgt.process_options(varargin, 'splitby', 'none', 'magthresh', -999.0);
 
 
 			for c = 1 : length(cobj)
@@ -463,7 +485,7 @@ classdef catalog
 					plot( cobj(c).dnum(i), cobj(c).mag(i), 'bo' );
 					disp(sprintf('Plotting mag vs dnum for %d events',length(i)));
 					datetick('x', 'keeplimits');
-					ymax = nanmax(catmatrices(1, cobj(c).mag(i)));
+					ymax = nanmax(libgt.catmatrices(1, cobj(c).mag(i)));
 					set(gca, 'YLim', [0 ymax]);
 					ylabel('mag');
 				else
@@ -474,9 +496,9 @@ classdef catalog
 						for count=1:numetypes
 							j=find(ismember(cobj(c).etype(i), etypes(count))==1);
 							subplot(numetypes, 1, count), plot( cobj(c).dnum(j), cobj(c).mag(j), 'bo' );
-							disp(sprintf('Plotting mag vs dnum for %d events for etype %s',length(j),etypes(count)));
+							%disp(sprintf('Plotting mag vs dnum for %d events for etype %s',length(j),etypes(count)));
 							datetick('x', 'keeplimits');
-							ymax = nanmax(catmatrices(1, cobj(c).mag(j)));
+							ymax = nanmax(libgt.catmatrices(1, cobj(c).mag(j)));
 							set(gca, 'YLim', [0 ymax]);
 							ylabel('mag');
 							title(etypes(count));
@@ -489,7 +511,7 @@ classdef catalog
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 		function cobj = volplot(cobj, varargin)
-            [nsigma, volcano, gridname] = process_options(varargin, 'nsigma', '5', 'volcano', '', 'gridname', '');
+            [nsigma, volcano, gridname] = libgt.process_options(varargin, 'nsigma', '5', 'volcano', '', 'gridname', '');
 
 			% find stations in this region
             sta = db2stations(cobj);
@@ -674,15 +696,23 @@ classdef catalog
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         function sta = db2stations(cobj)
-			db = dbopen('dbmaster/master_stations', 'r');
-			db = dblookup_table(db, 'site');
-			db = dbsubset(db, 'offdate==NULL');
-			db = dbsubset(db, sprintf('lat > %f && lat < %f', cobj.region(3), cobj.region(4)));
-			db = dbsubset(db, sprintf('lon > %f && lon < %f', cobj.region(1), cobj.region(2)));
-			nstations = dbquery(db, 'dbRECORD_COUNT');
-			if nstations > 0
-				disp(sprintf('%d stations were found in this cobj1.region',nstations));
-				[stalon, stalat, stacode] = dbgetv(db, 'lon', 'lat', 'sta');
+            stalon = []; stalat = []; stacode = [];
+            
+            DBMASTER = getenv('DBMASTER');
+            
+            if ~isempty(DBMASTER)
+                if exist(DBMASTER, 'file')
+                    db = dbopen(DBMASTER, 'r');
+                    db = dblookup_table(db, 'site');
+                    db = dbsubset(db, 'offdate==NULL');
+                    db = dbsubset(db, sprintf('lat > %f && lat < %f', cobj.region(3), cobj.region(4)));
+                    db = dbsubset(db, sprintf('lon > %f && lon < %f', cobj.region(1), cobj.region(2)));
+                    nstations = dbquery(db, 'dbRECORD_COUNT');
+                    if nstations > 0
+                        disp(sprintf('%d stations were found in this cobj1.region',nstations));
+                        [stalon, stalat, stacode] = dbgetv(db, 'lon', 'lat', 'sta');
+                    end
+                end
             end
             sta.lon = stalon; sta.lat = stalat; sta.code = stacode;
         end % function		
@@ -740,11 +770,11 @@ classdef catalog
 		function plotdailymagstats(cobj)
 
 			% plot the max, mean, min and various percentiles of the magnitude samples each day
-			cobj.day = floor(cobj.time);
+			day = floor(cobj.dnum);
 			c=1;
 			time=[];
-			for dnum=min(cobj.day):max(cobj.day)
-				i = find(cobj.day == dnum);
+			for dnum=min(day):max(day)
+				i = find(day == dnum);
 				if (length(i)>0)
 					minmag(c)=nanmin(cobj.mag(i));
 					maxmag(c)=nanmax(cobj.mag(i));
@@ -769,7 +799,7 @@ classdef catalog
 				plot(time,maxmag,time,p95,time,meanmag,time,med,time,p5,time,minmag);
 				ylabel('mag');
 				legend('maximum','95th%ile','mean','median','5th%ile','minimum');
-				dateticklabel('x');
+				datetick('x');
 				%plot(time,stdev);
 				%dateticklabel('x');
 				%title('standard deviation in mag');ylabel('mag');
@@ -847,6 +877,8 @@ classdef catalog
         end
     end
     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     methods Static
         function plotgrid(gridname)
             [region, source, lon, lat] = readavogrids(gridname);
@@ -859,7 +891,7 @@ classdef catalog
         end        
         
         function plotbox(volcano)
-            [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat] = readavovolcs(volcano);
+            [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat] = libgt.readavovolcs(volcano);
             hold on;
             plot(sourcelon, sourcelat, 'r^');
             text(sourcelon, sourcelat, volcano);

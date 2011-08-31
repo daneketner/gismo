@@ -17,7 +17,7 @@ function cmatrix=catmatrices(matrix2,matrix1);
 % OUPUT:
 %   cmatrix         - the concatenated matrix
 
-print_debug(sprintf('> %s', mfilename),3);
+libgt.print_debug(sprintf('> %s', mfilename),3);
 if size(matrix1)~=[0 0]
     s1=size(matrix1);
     s2=size(matrix2);
@@ -39,4 +39,4 @@ else
     cmatrix=matrix2;
 end
 
-print_debug(sprintf('< %s', mfilename),3);
+libgt.print_debug(sprintf('< %s', mfilename),3);

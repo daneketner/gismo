@@ -22,7 +22,7 @@ function [dnum_bin, counts_per_bin, sum_per_bin, smallest_per_bin, median_per_bi
 %   std_per_bin     	- standard deviation of all values in each bin
 %   median_time_interval - median time interval between values in each bin
 
-print_debug(sprintf('> %s', mfilename),2);
+libgt.print_debug(sprintf('> %s', mfilename),2);
 l1=length(dnum);
 l2=length(data);
 dnum_bin = [];
@@ -60,4 +60,4 @@ else
     disp('Could not bin - vector lengths dont match');
 end
 
-print_debug(sprintf('< %s', mfilename),2);
+libgt.print_debug(sprintf('< %s', mfilename),2);
