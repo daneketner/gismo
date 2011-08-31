@@ -1,7 +1,7 @@
 function [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat] = readavovolcs(volcano, pffile)
-% [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat]=readavovolcs(volcano, [pffile])
-%   
-% Glenn Thompson, 2009/07/23
+% READAVOVOLCS Read the avo_volcs.pf file.
+%
+
 libgt.print_debug(sprintf('> %s', mfilename),4)
 
 if ~exist('pffile', 'var') 

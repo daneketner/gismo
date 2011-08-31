@@ -1,21 +1,26 @@
 function cmatrix=catmatrices(matrix2,matrix1);
-% cmatrix=catmatrices(matrix2,matrix1);
-% Glenn Thompson, 2001
-% Sometimes it is rather tedious when reading in data
-% to work out how to concatenate matrices.
-% catmatrices is different to the inbuilt function cat,
-% in that it works out in what what the dimensions are
-% compatible, whereas cat expects the programmer to know.
+% CATMATRICES - concatenate 2D matrices of arbitrary size
+%    Sometimes it is rather tedious when reading in data
+%    to work out how to concatenate matrices.
+%    catmatrices is different to the inbuilt function cat,
+%    in that it works out in what what the dimensions are
+%    compatible, whereas cat expects the programmer to know.
 %
-% Usage:
-%   outmatrix=catmatrices(matrix2,matrix1);
+%    Usage:
+%      outmatrix=catmatrices(matrix2,matrix1);
 %
-% INPUT:
-%   matrix2         - the matrix to be appended
-%   matrix1         - the primary matrix, to append matrix2 to
+%    INPUT:
+%      matrix2         - the matrix to be appended
+%      matrix1         - the primary matrix, to append matrix2 to
 %
-% OUPUT:
-%   cmatrix         - the concatenated matrix
+%    OUPUT:
+%      cmatrix         - the concatenated matrix
+%
+%    See also cat
+
+% AUTHOR: Glenn Thompson
+% $Date:$
+% $Revision:$
 
 libgt.print_debug(sprintf('> %s', mfilename),3);
 if size(matrix1)~=[0 0]

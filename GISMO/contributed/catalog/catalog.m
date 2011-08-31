@@ -2,92 +2,90 @@ classdef catalog
 %
 % CATALOG Seismic Catalog class constructor, version 1.0.
 % 
-% CATALOG is a class that has been developed around loading and
-% manipulating earthquake catalogs at the Montserrat Volcano Observatory,
-% and more recently, the Alaska Volcano Observatory. 
+%    CATALOG is a class that has been developed around loading and
+%    manipulating earthquake catalogs at the Montserrat Volcano Observatory,
+%    and more recently, the Alaska Volcano Observatory. 
 %
-% CATALOG only imports catalog information from:
-% (1) a CSS3.0 database - the default format used by Antelope/Datascope.
-% (2) a Datascope database written in the "swarms1.0" schema, defined at AVO. 
-%     This is the format used by the swarm tracking system.
+%    CATALOG only imports catalog information from:
+%    (1) a CSS3.0 database - the default format used by Antelope/Datascope.
+%    (2) a Datascope database written in the "swarms1.0" schema, defined at AVO. 
+%        This is the format used by the swarm tracking system.
 %
-% It would be trivial to add new import methods, and some useful importers
-% might read:
-% - a Hypoinverse file, 
-% - a Hypoellipse file,
-% - a Seisan catalog,
-% - an AQMS database. 
+%    It would be trivial to add new import methods, and some useful importers
+%    might read:
+%    - a Hypoinverse file, 
+%    - a Hypoellipse file,
+%    - a Seisan catalog,
+%    - an AQMS database. 
 %
-% C = CATALOG() creates an empty catalog object.
+%    C = CATALOG() creates an empty catalog object.
 %
-% % ------- READING FROM A CSS3.0 DATASCOPE DATABASE --------
+%    % ------- READING FROM A CSS3.0 DATASCOPE DATABASE --------
 %
-% C = CATALOG(SNUM, ENUM, MINMAG, REGION, DBROOT, ARCHIVEFORMAT) creates
-% a catalog object with preferred origins subsetted between SNUM and ENUM,
-% above magnitude MINMAG, geographically filtered using REGION from the
-% database DBROOT which is archived in ARCHIVEFORMAT.
-% These variables are described in "FIELDS" section below. REGION can
-% either be a 4-element vector [LONMIN LONMAX LATMIN LATMAX] or it can
-% be a region described in avo_volcs.pf such as 'spurr' or 'redoubt'.
+%    C = CATALOG(SNUM, ENUM, MINMAG, REGION, DBROOT, ARCHIVEFORMAT) creates
+%    a catalog object with preferred origins subsetted between SNUM and ENUM,
+%    above magnitude MINMAG, geographically filtered using REGION from the
+%    database DBROOT which is archived in ARCHIVEFORMAT.
+%    These variables are described in "FIELDS" section below. REGION can
+%    either be a 4-element vector [LONMIN LONMAX LATMIN LATMAX] or it can
+%    be a region described in avo_volcs.pf such as 'spurr' or 'redoubt'.
 %
-% EXAMPLES: (these assume you are on the AVO Linux network)
+%    EXAMPLES: (these assume you are on the AVO Linux network)
 %
-% 1. Create a catalog object of the last 5 days of AEIC events from the region latitude = 55.0 to 65.0, longitude = -170.0 to -135.0
-% c = catalog(utnow-3, utnow, [], [-170.0 -135.0 55.0 65.0] , '/aerun/sum/run/dbsum/dbsum', 'daily');
+%    1. Create a catalog object of the last 5 days of AEIC events from the region latitude = 55.0 to 65.0, longitude = -170.0 to -135.0
+%    c = catalog(utnow-3, utnow, [], [-170.0 -135.0 55.0 65.0] , '/aerun/sum/run/dbsum/dbsum', 'daily');
 %
-% 2. Create a catalog object of all events with magnitude > 0.2 in the last 3 days of data from Redoubt:
-% c = catalog(utnow-3, utnow, 0.2, 'redoubt', '/avort/oprun/events/antelope/events_antelope', 'daily');
+%    2. Create a catalog object of all events with magnitude > 0.2 in the last 3 days of data from Redoubt:
+%    c = catalog(utnow-3, utnow, 0.2, 'redoubt', '/avort/oprun/events/antelope/events_antelope', 'daily');
 %
-% 3. Create a catalog object of all events recorded at Spurr between 1989 and 2006:
-% c = catalog(datenum(1989,1,1), datenum(2006,1,1), [], 'spurr', '/Seis/Kiska4/picks/Total/Total', '');
+%    3. Create a catalog object of all events recorded at Spurr between 1989 and 2006:
+%    c = catalog(datenum(1989,1,1), datenum(2006,1,1), [], 'spurr', '/Seis/Kiska4/picks/Total/Total', '');
 %
-% % ------- DESCRIPTION OF FIELDS IN CATALOG OBJECT ------------------
+%    % ------- DESCRIPTION OF FIELDS IN CATALOG OBJECT ------------------
 %
-% The following are vectors, containing one element per origin:
+%    The following are vectors, containing one element per origin:
 %
-%   DNUM:   a MATLAB datenum corresponding to origin time
-%   LON:    origin longitude
-%   LAT:    origin latitude
-%   DEPTH:  origin depth
-%   NASS:   number of associated arrivals
-%   EVID:   a number which acts as an event identifier
-%   AUTH:   a string which describes who or what computed the hypocenter
-%   MAG:    the magnitude.
-%   ETYPE:  the event type (subclassification). For example "t" = VT.
+%      DNUM:   a MATLAB datenum corresponding to origin time
+%      LON:    origin longitude
+%      LAT:    origin latitude
+%      DEPTH:  origin depth
+%      NASS:   number of associated arrivals
+%      EVID:   a number which acts as an event identifier
+%      AUTH:   a string which describes who or what computed the hypocenter
+%      MAG:    the magnitude.
+%      ETYPE:  the event type (subclassification). For example "t" = VT.
 %
-% The following describe the catalog data source:
+%     The following describe the catalog data source:
 %
-%   SNUM:   a datenum describing the start date/time of the catalog.
-%   ENUM:   a datenum describing the end date/time of the catalog.
-%   MINMAG: a magnitude threshold applied to catalog.
-%   REGION: a [minlon maxlon minlat maxlat] filter applied to the catalog.
-%   DBROOT: the root database name.
-%   ARCHIVEFORMAT:  Either '' for a single database, 'daily' for a daily
-%   archive or 'monthly' for a monthly archive.
+%      SNUM:   a datenum describing the start date/time of the catalog.
+%      ENUM:   a datenum describing the end date/time of the catalog.
+%      MINMAG: a magnitude threshold applied to catalog.
+%      REGION: a [minlon maxlon minlat maxlat] filter applied to the catalog.
+%      DBROOT: the root database name.
+%      ARCHIVEFORMAT:  Either '' for a single database, 'daily' for a daily
+%                      archive or 'monthly' for a monthly archive.
 %
-% % ------- METHODS -------- %
+%    % ------- METHODS -------- %
 %
-% plot(c):              - event magnitude versus time plot
-% volplot(c):           - basic lat-lon, lon-depth, lat-depth and depth-time plots.
-% volplotdiff(c1, c2):  - show the differences between origins in two
-%                       catalog objects (based on matching evid)
-% plotmagdiff(c1, c2):  - show the differences between magnitudes in two
-%                       catalog objects (based on matching evid)
-% plotdailymagstats(c): - plot max, min, mean and median magnitudes for
-%                       each day in catalog.
-% compare(c1, c2):      - attempt to match origins in two catalogs based on
-%                       small differences in hypocenter and origin time
-% sta = db2stations(region): - return a list of stations based on a region
-% plotbvalue(c):        - simple b-value plot for catalog.
-% plotstations(c):      - superimpose the locations of stations
+%    plot(c):              - event magnitude versus time plot
+%    volplot(c):           - basic lat-lon, lon-depth, lat-depth and depth-time plots.
+%    volplotdiff(c1, c2):  - show the differences between origins in two
+%                            catalog objects (based on matching evid)
+%    plotmagdiff(c1, c2):  - show the differences between magnitudes in two
+%                            catalog objects (based on matching evid)
+%    plotdailymagstats(c): - plot max, min, mean and median magnitudes for
+%                            each day in catalog.
+%    compare(c1, c2):      - attempt to match origins in two catalogs based on
+%                            small differences in hypocenter and origin time
+%    sta = db2stations(region): - return a list of stations based on a region
+%    plotbvalue(c):        - simple b-value plot for catalog.
+%    plotstations(c):      - superimpose the locations of stations
 %
-% % --------- Static Methods - should probably be in libgt instead --------- %
-% plotgrid(gridname):   - superimpose a detection grid (requires a grids database saved in places1.0 Datascope schema)  
-% plotbox(volcano):     - superimpose the region 
+%    % --------- Static Methods - should probably be in libgt instead --------- %
+%    plotgrid(gridname):   - superimpose a detection grid (requires a grids database saved in places1.0 Datascope schema)  
+%    plotbox(volcano):     - superimpose the region 
 %
-% % ------- SEE ALSO -------- %
-% EVENTRATE - takes a catalog object and computes/plots different event
-% rate metrics.
+% See also eventrate
 
 % AUTHOR: Glenn Thompson, Montserrat Volcano Observatory
 % $Date: 2000-09-11 $

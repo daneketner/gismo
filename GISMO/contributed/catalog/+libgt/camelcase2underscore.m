@@ -1,4 +1,13 @@
 function str = camelcase2underscore(str)
+% CAMELCASE2UNDERSCORE
+%    Take a string like GreatSitkin and convert it to Great_Sitkin
+%    strUS = camelcase2underscore(strCC)
+%
+%    See also underscore2camelcase
+
+% AUTHOR: Glenn Thompson
+% $Date:$
+% $Revision:$
 
 %str = firstalgorithm(str);
 str = secondalgorithm(str);

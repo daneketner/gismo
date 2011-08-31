@@ -1,26 +1,31 @@
 function [dnum_bin, counts_per_bin, sum_per_bin, smallest_per_bin, median_per_bin, std_per_bin, median_time_interval] = bin_irregular(dnum, data, binsize, snum, enum, stepsize)
-% Author: Glenn Thompson 2001
-% For resampling/binning irregular data
+% BIN_IRREGULAR bin an irregularly-sampled timeseries (like earthquake origin times).
 %
-% Usage:
-%   [dnum_bin, counts_per_bin, sum_per_bin, smallest_per_bin, median_per_bin, std_per_bin, median_time_interval] = bin_irregular(dnum, data, binsize, snum, enum, [stepsize])
+%    Usage:
+%      [dnum_bin, counts_per_bin, sum_per_bin, smallest_per_bin, median_per_bin, std_per_bin, median_time_interval] = bin_irregular(dnum, data, binsize, snum, enum, [stepsize])
 %
-% INPUTS:
-%   dnum            - irregular spaced date vector in datenum format
-%   data            - data values corresponding to dnum samples
-%   binsize         - binsize (in days) to use for output series
-%   snum            - start datenum (first centre used for output data)
-%   enum            - end datenum (last centre used for output data)
-%   stepsize        - (optional) Normally bins do not overlap. But if stepsize is set to a value smaller than binsize, bins will overlap.
+%    INPUTS:
+%      dnum            - irregular spaced date vector in datenum format
+%      data            - data values corresponding to dnum samples
+%      binsize         - binsize (in days) to use for output series
+%      snum            - start datenum (first centre used for output data)
+%      enum            - end datenum (last centre used for output data)
+%      stepsize        - (optional) Normally bins do not overlap. But if stepsize is set to a value smaller than binsize, bins will overlap.
 %
-% OUTPUTS:
-%   dnum_bin        	- regular space date vector (centres of bins)
-%   counts_per_bin  	- number of values per bin
-%   sum_per_bin     	- sum of all values in each bin
-%   smallest_per_bin 	- smallest data value in each bin
-%   median_per_bin  	- median value in each bin
-%   std_per_bin     	- standard deviation of all values in each bin
-%   median_time_interval - median time interval between values in each bin
+%    OUTPUTS:
+%      dnum_bin        	- regular space date vector (centres of bins)
+%      counts_per_bin  	- number of values per bin
+%      sum_per_bin     	- sum of all values in each bin
+%      smallest_per_bin 	- smallest data value in each bin
+%      median_per_bin  	- median value in each bin
+%      std_per_bin     	- standard deviation of all values in each bin
+%      median_time_interval - median time interval between values in each bin
+%
+%    See also: 
+
+% AUTHOR: Glenn Thompson
+% $Date:$
+% $Revision:$
 
 libgt.print_debug(sprintf('> %s', mfilename),2);
 l1=length(dnum);

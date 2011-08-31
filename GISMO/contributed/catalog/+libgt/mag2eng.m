@@ -1,22 +1,23 @@
 function eng=mag2eng(mag);
-% eng=mag2eng(mag)
-% mag2eng converts a magnitude into energy using the conversion:
-%   mag = log10(eng)/1.5 - 3.7
-% All that matters is that energy is roughly proportional to the peak
-% amplitude to the power of 1.5.
-% The correction factor of 3.7 worked well for events at Montserrat.
-% It cancels out if computing cumulative magnitude from a set of
-% magnitudes.
+% MAG2ENG Convert (a vector of) energy(/ies) into (a vector of) equivalent magnitude(s).
+%   
+%   Conversion is based on the the following formula from Hanks and Kanamori (1979):
 %
-% Glenn Thompson, MVO, 2001
+%      mag = log10(energy)/1.5 - 4.7
 %
-% 2009/08/06
-% while 3.7 may be an appropriate factor for montserrat, based on the output
-% of the energy algorithm I used, a quite different form value is suggested
-% by Hanks and Kanamori 1979, as referenced in my swarm alarm paper
-% rather than
-%	eng=power(10,(mag+3.7)*1.5);
-% it suggests, using Joules instead of ergs
+%   That is, energy (Joules) is roughly proportional to the peak amplitude to the power of 1.5.
+%   This obviously is based on earthquake waveforms following a characteristic shape.
+%   For a waveform of constant amplitude, energy would be proportional to peak amplitude
+%   to the power of 2.
+%
+%   For Montserrat data, when calibrating against events in the SRU catalog, a factor of
+%   3.7 was preferred to 4.7.
+%
+%   See also eng2mag
+
+% AUTHOR: Glenn Thompson
+% $Date:$
+% $Revision:$
 
 % for events without a magnitude, change it to -0.5 for energy calculation purposes
 

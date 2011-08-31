@@ -2,72 +2,72 @@ classdef eventrate
 %
 % EVENTRATE Event Rate class constructor, version 1.0.
 %
-% Seismologists frequently make plots of 'earthquake counts", i.e. the
-% number of events per day, or per hour, or per some other time interval.
-% Sometimes it is some other parameter - like the cumulative energy, or
-% average magnitude, per unit time that is of interest. The EVENRTATE class
-% provides a convenient tool to compute and plot many different metrics on a
-% user-defined timescale. It is generally used in combination with the
-% catalog class. It can also import directly from a Datascope database that
-% uses the swarms schema.
+%    Seismologists frequently make plots of 'earthquake counts", i.e. the
+%    number of events per day, or per hour, or per some other time interval.
+%    Sometimes it is some other parameter - like the cumulative energy, or
+%    average magnitude, per unit time that is of interest. The EVENRTATE class
+%    provides a convenient tool to compute and plot many different metrics on a
+%    user-defined timescale. It is generally used in combination with the
+%    catalog class. It can also import directly from a Datascope database that
+%    uses the swarms schema.
 % 
-% EVENTRATE is a class that has been developed around plotting earthquake
-% counts - i.e. the rate of events per unit time. It has evolved to compute
-% other metrics such the mean event rate, median event rate, mean magnitude
-% and cumulative magnitude per hour, which are important metrics for an AVO
-% swarm tracking system.  
+%    EVENTRATE is a class that has been developed around plotting earthquake
+%    counts - i.e. the rate of events per unit time. It has evolved to compute
+%    other metrics such the mean event rate, median event rate, mean magnitude
+%    and cumulative magnitude per hour, which are important metrics for an AVO
+%    swarm tracking system.  
 %
-% ER = EVENTRATE() creates an empty eventrate object.
+%    ER = EVENTRATE() creates an empty eventrate object.
 %
-% ER = EVENTRATE(CATALOGOBJECT, BINSIZEINDAYS) creates an eventrate object
-% from a CATALOG object. See CATALOG for more details.
+%    ER = EVENTRATE(CATALOGOBJECT, BINSIZEINDAYS) creates an eventrate object
+%    from a CATALOG object. See CATALOG for more details.
 %
-% EXAMPLES:
+%    EXAMPLES:
 %
-% ER = EVENTRATE(catalogobject, 1.0) creates an eventrate object from a
-% catalog object, with a binsize of 1 day.
+%    ER = EVENTRATE(catalogobject, 1.0) creates an eventrate object from a
+%    catalog object, with a binsize of 1 day.
 %
-% % ER = EVENTRATE(catalogobject, 1/24) creates an eventrate object from a
-% catalog object, with a binsize of 1 hour.
+%    % ER = EVENTRATE(catalogobject, 1/24) creates an eventrate object from a
+%    catalog object, with a binsize of 1 hour.
 %
 %
-% % ------- DESCRIPTION OF FIELDS IN AN EVENTRATE OBJECT ------------------
-% counts; 		% (array) number of events in each bin
-% mean_rate;      % (array) number of events per hour in each bin
-% median_rate;	% (array) reciprocal of the median time interval between events. Represented as an hourly rate.
-% cum_mag;		% (array) total sum of energy in each bin, represented as a magnitude.
-% mean_mag;		% (array)   
-% median_mag;     % (array)
-% total_counts;   % (scalar) sum of counts
-% total_mag;      % (scalar) total sum of energy of all catalogObjs, represented as a magnitude
-% dnum;           % (array) 	
-% numbins;        % (scalar)
-% detection_threshold
-% etype
-% snum
-% enum
-% binsize
-% stepsize
-% region
-% minmag
-% dbroot
-% archiveformat
-% auth
+%    % ------- DESCRIPTION OF FIELDS IN AN EVENTRATE OBJECT ------------------
+%    counts; 		% (array) number of events in each bin
+%    mean_rate;      % (array) number of events per hour in each bin
+%    median_rate;	% (array) reciprocal of the median time interval between events. Represented as an hourly rate.
+%    cum_mag;		% (array) total sum of energy in each bin, represented as a magnitude.
+%    mean_mag;		% (array)   
+%    median_mag;     % (array)
+%    total_counts;   % (scalar) sum of counts
+%    total_mag;      % (scalar) total sum of energy of all catalogObjs, represented as a magnitude
+%    dnum;           % (array) 	
+%    numbins;        % (scalar)
+%    detection_threshold
+%    etype
+%    snum
+%    enum
+%    binsize
+%    stepsize
+%    region
+%    minmag
+%    dbroot
+%    archiveformat
+%    auth
 %
-% % ------- METHODS -------- %
+%    % ------- METHODS -------- %
 %
-% plot(er) or plot(er, 'metric', 'counts')   - event rate versus time
-% plot(er, 'metric', {'mean_rate'})            - hourly mean event rate versus time
-% plot(er, 'metric', {'median_rate'})          - hourly median event rate versus time
-% plot(er, 'metric', {'mean_mag'})             - hourly mean magnitude versus time
-% plot(er, 'metric', {'cum_mag'})              - hourly cumulative magnitude versus time
-% plot(er, 'metric', {'counts';'mean_rate';'cum_mag'}) - would make plots for all those metrics mentioned in the cell array.
-% importfromswarmdb - yep, there is a method to construct an eventrate
-% object from a swarm metrics database, as written by the real-time swarm
-% tracking module "dbdetectswarm".
+%    plot(er) or plot(er, 'metric', 'counts')    - event rate versus time
+%    plot(er, 'metric', 'mean_rate')             - hourly mean event rate versus time
+%    plot(er, 'metric', 'median_rate')           - hourly median event rate versus time
+%    plot(er, 'metric', 'mean_mag')              - hourly mean magnitude versus time
+%    plot(er, 'metric', 'cum_mag')               - hourly cumulative magnitude versus time
+%    plot(er, 'metric', {'counts';'mean_rate';'cum_mag'}) - would make plots for all those metrics 
+%							    mentioned in the cell array.
+%    importfromswarmdb 				 - construct an eventrate object from a swarm metrics 
+% 						   database, as written by the real-time swarm
+%    						   tracking module "dbdetectswarm".
 %
-% % ------- SEE ALSO -------- %
-% CATALOG 
+%    See also catalog
 
 % AUTHOR: Glenn Thompson, Montserrat Volcano Observatory
 % $Date: 2000-09-11 $
