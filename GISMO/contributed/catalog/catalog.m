@@ -261,8 +261,7 @@ classdef catalog
 			else
 				if strcmp(archiveformat,'daily')
 					for dnum=floor(snum):floor(enum-1/1440)
-						[yr,mn,dy]=libgt.yyyymmdd(dnum);
-						dbname = sprintf('%s_%s_%s_%s',dbroot,yr,mn,dy);
+						dbname = sprintf('%s_%s_%s_%s',dbroot,datestr(dnum, 'yyyy_mm_dd'));
 						if exist(dbname,'file')
 							e = cobj.css_import(max([dnum snum]),min([dnum+1 enum]),dbname,leftlon,rightlon,lowerlat,upperlat,minz,maxz,minmag);
 							cobj.lon   = cat(1,cobj.lon,   e.lon);

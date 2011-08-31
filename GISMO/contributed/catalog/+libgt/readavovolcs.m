@@ -1,6 +1,24 @@
 function [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat] = readavovolcs(volcano, pffile)
 % READAVOVOLCS Read the avo_volcs.pf file.
+%    Usage:
+%          [sourcelon, sourcelat, minlon, maxlon, minlat, maxlat] = readavovolcs(volcano [, pffile])
 %
+%    Given a string (volcano), READAVOVOLCS will attempt to find that string in a file called
+%    avo_volcs.pf, and then read in the corresponding summit (source) longitude and latitude, along
+%    with a region that corresponds to the geographical areas used in the AVO histogram.
+%
+%    The avo_volcs.pf file was developed as part of the AVO histogram application, and it has been used
+%    by several other applications since, though it would make more sense to store these data in a
+%    database (e.g. using the Datascope places1.2 schema).
+%
+%    If an explicit path to the parameter file is not given, READAVOVOLCS will attempt to use
+%    pf/avo_volcs.pf and then /avort/oprun/pf/avo_volcs.pf. By using an explicit path, a user could
+%    create an arbitrarily named file like /home/username/config/myvolcanoes.txt, where each line
+%    consists of:
+%           volcanoname sourcelon sourcelat minlon maxlon minlat maxlat
+
+
+% Author: Glenn Thompson
 
 libgt.print_debug(sprintf('> %s', mfilename),4)
 
