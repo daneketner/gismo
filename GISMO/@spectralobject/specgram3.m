@@ -1,9 +1,9 @@
-function result=specgram3(w, s, spectrogramFraction)
+function result=specgram3(s, w, spectrogramFraction)
 % SPECGRAM3 produce an multi-channel spectrogram plot in the style of
 % AVO web (IceWeb) spectrograms
 %
 % Usage:
-% 	result=specgram3(w,s,spectrogramFraction)
+% 	result=specgram3(s, w, spectrogramFraction)
 %
 % Inputs:
 %	w - a vector of waveform objects
@@ -160,8 +160,8 @@ end
 function [Xtickmarks,Xticklabels]=findMinuteMarks(timewindow);
 
 % calculate where minute marks should be, and labels
-snum = ceilminute(timewindow.start);
-enum = floorminute(timewindow.stop);
+snum = matlab_extensions.ceilminute(timewindow.start);
+enum = matlab_extensions.floorminute(timewindow.stop);
 
 
 % Number of minute marks should be no greater than 20
