@@ -71,12 +71,10 @@ else
 end
 
 % Change Y-Labels to 'sta\nchan'
-%station = fliplr(waveform2station(w));
 for c=1:numw
 	hyl = get(ha(c), 'YLabel');
-	%hyl_string = sprintf('%s\n%s',station(c).name, station(c).channel);
-	hyl_string = sprintf('%s\n%s',get(w(c), 'station'), get(w(c), 'channel'));
-	set(hyl, 'String', hyl_string,'FontSize',12);
+	hyl_string = sprintf('%s.%s',get(w(numw-c+1), 'station'), get(w(numw-c+1), 'channel'));
+	set(hyl, 'String', hyl_string,'FontSize',10);
 end
 
 % Remove titles
