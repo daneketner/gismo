@@ -328,15 +328,13 @@ function h = pad_w(h)
 for n = 1:numel(h.wave)
    w = h.wave(n);
    t1 = get(w,'start');         % start of w (datenum)
-   t2 = get(w,'end');           % end of w (datenum)
    m1 = (t1-floor(t1))*24*60;   % number of decimal minutes from day start
-   m2 = (t2-floor(t2))*24*60;   % number of decimal minutes from day end
    gap1 = rem(m1,h.mpl)/24/60;  % gap from w start to mpl-adjusted start
    tt1 = t1-gap1;               % mpl-adjusted start time
    if (gap1 > 0)
       N1 = round(gap1*24*60*60*get(w,'freq')); % length of gap1 (samples)
       pad1 = ones(N1,1)*NaN;
-      dat = [pad1; get(w(n),'data')];
+      dat = [pad1; get(w,'data')];
       w = set(w,'data',dat);
       w = set(w,'start',tt1);
       h.wave(n) = w;
