@@ -113,18 +113,46 @@ end
 % Example values show what k1 through k4 look like
 % And how they are used in different display types
 
+% nC for alternating between multiple trace colors with only one waveform
+nC = length(h.trace_color);
 for n = 1:B.tra_nt     % for n = 1,2,3,4,5,6,7,8,9,...,298,299,300
-                      
-k1 = ceil(n/B.nw);     % k1 = 1,1,1,2,2,2,3,3,3,...,99,99,99,100,100,100 
-k2 = n-(B.nw*(k1-1));  % k2 = 1,2,3,1,2,3,1,2,3,...,1,2,3,1,2,3,1,2,3 
-k3 = ceil(n/B.tra_ns); % k3 = 1,1,1,1,1,1,...,2,2,2,2,2,2,...,3,3,3,3,3
-k4 =...       % k4 = 1,2,3,4,...,99,100,1,2,3,...,99,100,1,2,3,...,99,100
- n-floor(n/(B.tra_ns+.00001))*B.tra_ns;
-
+    % k0 only used for single display type
+    k0 = n-(nC*(ceil(n/nC)-1));  % k0 = 1,2,3,4,1,2,3,4,...,1,2,3,4
+    % k1 through k4 only used for multiple waveform helicorder displays
+    k1 = ceil(n/B.nw);     % k1 = 1,1,1,2,2,2,3,3,3,...,99,99,99,100,100,100
+    k2 = n-(B.nw*(k1-1));  % k2 = 1,2,3,1,2,3,1,2,3,...,1,2,3,1,2,3,1,2,3
+    k3 = ceil(n/B.tra_ns); % k3 = 1,1,1,1,1,1,...,2,2,2,2,2,2,...,3,3,3,3,3
+    % k4 = 1,2,3,4,...,99,100,1,2,3,...,99,100,1,2,3,...,99,100
+    k4 = n-floor(n/(B.tra_ns+.00001))*B.tra_ns;
+       
 switch lower(h.display)
    
-%% Single/Alternate Display Type (Default)   
-   case {'single','alternate'}
+%% Single Display Type (Default for single waveform)   
+   case {'single'}
+       
+      B.off(n) = .5+(B.tra_nt-n)*.25; % Trace offset from bottom
+      B.trace(n) = extract(h.wave,'index',...
+         1+(k1-1)*B.tra_l, k1*B.tra_l)/B.scale+B.off(n);
+      B.k = 1;
+      B.tra_mean(n) = mean(B.trace(n));
+      if ~isempty(h.e_sst{:})
+         B.trace_e(n) = extract(B.e_nan{:},'index',...
+             1,B.tra_l)/B.scale + B.off(n);
+      end
+      B.trace_h(n) = plot(B.trace(n),'color',h.trace_color{k0},...
+         'xunit','minutes');
+      if n == 1
+         hold on
+      end
+      if ~isempty(h.e_sst{:}) % Plot event red
+         B.trace_e_h(n) = plot(B.trace_e(n),...
+         'color',h.event_color{:},'xunit','minutes');
+      else
+         B.trace_e_h(n) = NaN;
+      end
+      
+%% Alternate Display Type (Default for multiple waveforms)   
+   case {'alternate'}
       B.off(n) = .5+(B.tra_nt-n)*.25; % Trace offset from bottom
       B.trace(n) = extract(h.wave(k2),'index',...
          1+(k1-1)*B.tra_l(k2), k1*B.tra_l(k2))/B.scale(k2)+B.off(n);

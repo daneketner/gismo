@@ -86,7 +86,7 @@ for n = 1:2:nargin-2
             pv = {pv};
             nv = 1;
          end
-         if (nw==nv) && iscell(pv)
+         if (nw==1 || nw==nv) && iscell(pv)
             for m = 1:nv
                if size(pv{m},2)==3
                   for mm = 1:numel(pv{m})
